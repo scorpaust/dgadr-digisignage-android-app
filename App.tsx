@@ -30,17 +30,6 @@ const scaleFactor = windowWidth / 320;
 const windowHeight = Dimensions.get("window").height;
 const hScaleFactor = windowHeight / 320;
 
-const axios = require("axios");
-
-axios
-  .get("https://incomplete-chain.badssl.com")
-  .then(function (response: any) {
-    console.log(response);
-  })
-  .catch(function (error: any) {
-    console.log(error);
-  });
-
 function padding(
   a: string,
   b: string,
