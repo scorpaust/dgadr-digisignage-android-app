@@ -1,13 +1,11 @@
 # git's files (which MUST be ASCII or UTF-8)
 .gitattributes zos-working-tree-encoding=iso8859-1
 .gitignore zos-working-tree-encoding=iso8859-1
-
 # The default for text files
 *.cpp zos-working-tree-encoding=ibm-1047
 *.md zos-working-tree-encoding=iso8859-1
-
 # Binary files
-*.jpg binary
-*.png binary
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
 *.gif binary
 *.zip binary
