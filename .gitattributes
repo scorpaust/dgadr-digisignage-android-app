@@ -10,3 +10,4 @@
 *.gif binary
 *.zip binary
 assets filter=lfs diff=lfs merge=lfs -text
+*.ai filter=lfs diff=lfs merge=lfs -text
