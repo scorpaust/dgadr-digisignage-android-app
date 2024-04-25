@@ -23,6 +23,7 @@ import DateTimeComponent from "./components/DateTimeComponent";
 import UsefulLinksScreen from "./screens/UsefulLinksScreen";
 import OrganogramScreen from "./screens/OrganogramScreen";
 import EventsScreen from "./screens/EventsScreen";
+import NotificationScheduler from "./components/notifications/NotificationScheduler";
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -307,6 +308,7 @@ function TabScreen() {
 export default function App() {
   return (
     <SafeAreaProvider>
+      <NotificationScheduler />
       <NavigationContainer>
         <TabScreen />
       </NavigationContainer>

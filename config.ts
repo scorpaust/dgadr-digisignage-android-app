@@ -2,8 +2,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
-
-
+import { getDatabase } from "firebase/database";
 
 // TODO: Add SDKs for Firebase products that you want to use
 
@@ -11,14 +10,15 @@ import { getStorage } from "firebase/storage";
 
 // Get a non-default Storage bucket
 
-
 // Your web app's Firebase configuration
 
 const firebaseConfig = {
-
   apiKey: "AIzaSyBI_6oXpJD6JGUs1uF_3gfEUlRKuhb3zeY",
 
   authDomain: "dgadr-digisignage-app.firebaseapp.com",
+
+  databaseURL:
+    "https://dgadr-digisignage-app-default-rtdb.europe-west1.firebasedatabase.app",
 
   projectId: "dgadr-digisignage-app",
 
@@ -26,13 +26,13 @@ const firebaseConfig = {
 
   messagingSenderId: "722329748271",
 
-  appId: "1:722329748271:web:ec9471a218242e00f917da"
-
+  appId: "1:722329748271:web:ec9471a218242e00f917da",
 };
-
 
 // Initialize Firebase
 
 const firebase = initializeApp(firebaseConfig);
 
-export { firebase };
+const db = getDatabase();
+
+export { firebase, db };

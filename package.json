@@ -36,7 +36,9 @@
     "react-native-snap-carousel": "4.0.0-beta.6",
     "react-native-svg": "13.9.0",
     "react-native-vector-icons": "^10.0.2",
-    "update": "^0.7.4"
+    "update": "^0.7.4",
+    "expo-notifications": "~0.20.1",
+    "expo-device": "~5.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
