@@ -1,5 +1,12 @@
 import React from "react";
-import { Modal, StyleSheet, Text, Pressable, View } from "react-native";
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  Pressable,
+  View,
+  Dimensions,
+} from "react-native";
 
 interface GreetingModalProps {
   modalVisible?: boolean;
@@ -7,6 +14,9 @@ interface GreetingModalProps {
   title: string;
   message: string;
 }
+
+const windowWidth = Dimensions.get("window").width;
+const scaleFactor = windowWidth / 320;
 
 const GreetingModal: React.FC<GreetingModalProps> = ({
   modalVisible,
@@ -44,13 +54,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
+    marginTop: "20%",
   },
   modalView: {
-    margin: 20,
+    margin: "5%",
     backgroundColor: "white",
     borderRadius: 20,
-    padding: 35,
+    padding: "5%",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -63,7 +73,7 @@ const styles = StyleSheet.create({
   },
   button: {
     borderRadius: 20,
-    padding: 10,
+    padding: "2%",
     elevation: 2,
   },
   buttonClose: {
@@ -73,16 +83,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
+    fontSize: 6 * scaleFactor,
   },
   modalText: {
-    marginBottom: 15,
+    marginBottom: "5%",
     textAlign: "center",
+    fontSize: 6 * scaleFactor,
   },
   modalTitle: {
-    marginBottom: 15,
+    marginBottom: "5%",
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 18,
+    fontSize: 8 * scaleFactor,
   },
 });
 
