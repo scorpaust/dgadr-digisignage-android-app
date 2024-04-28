@@ -45,5 +45,6 @@
     "@types/react": "~18.2.14",
     "typescript": "^5.1.3"
   },
+  "proxy": "172.20.0.13:3128",
   "private": true
 }

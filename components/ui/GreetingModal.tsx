@@ -1,4 +1,5 @@
 import React from "react";
+import { useEffect } from "react";
 import {
   Modal,
   StyleSheet,
@@ -13,6 +14,7 @@ interface GreetingModalProps {
   setModalVisible: (visible: boolean) => void;
   title: string;
   message: string;
+  distribute: boolean;
 }
 
 const windowWidth = Dimensions.get("window").width;
@@ -23,7 +25,23 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
   setModalVisible,
   title,
   message,
+  distribute,
 }) => {
+  let position:
+    | "center"
+    | "flex-start"
+    | "flex-end"
+    | "space-between"
+    | "space-around"
+    | "space-evenly"
+    | undefined;
+
+  if (distribute) {
+    position = title === "Despedida da DGADR" ? "flex-end" : "flex-start";
+  } else {
+    position = "center";
+  }
+
   return (
     <Modal
       animationType="slide"
@@ -33,7 +51,7 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
         setModalVisible(!modalVisible);
       }}
     >
-      <View style={styles.centeredView}>
+      <View style={[styles.centeredView, { justifyContent: position }]}>
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>{title}</Text>
           <Text style={styles.modalText}>{message}</Text>
