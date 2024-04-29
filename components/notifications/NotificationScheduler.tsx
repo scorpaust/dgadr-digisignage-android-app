@@ -8,6 +8,7 @@ interface Employee {
   startDate: string;
   endDate?: string;
   startYear?: number;
+  department?: string;
 }
 
 const NotificationScheduler: React.FC = () => {
@@ -41,7 +42,7 @@ const NotificationScheduler: React.FC = () => {
 
     employees.forEach((employee) => {
       if (isSameDay(employee.startDate, todayFormatted)) {
-        welcomeNames.push(employee.name);
+        welcomeNames.push(`${employee.name}\n(${employee.department})`);
       }
       if (
         employee.endDate &&
@@ -57,8 +58,8 @@ const NotificationScheduler: React.FC = () => {
 
     if (welcomeNames.length > 0) {
       setWelcomeMsg(
-        `A DGADR dá as boas vindas aos trabalhadores: ${welcomeNames.join(
-          ", "
+        `A DGADR dá as boas vindas aos trabalhadores:\n\n\n${welcomeNames.join(
+          "\n\n"
         )}`
       );
       setIsWelcomeModalVisible(true);
@@ -66,9 +67,9 @@ const NotificationScheduler: React.FC = () => {
 
     if (leavingEmployees.length > 0) {
       setByeMsg(
-        `A DGADR despede-se dos seguintes trabalhadores, agradecendo o contributo dos mesmos: ${leavingEmployees.join(
-          ", "
-        )}.`
+        `A Direção-Geral de Agricultura e Desenvolvimento Rural (DGADR) deseja os maiores sucessos e felicidade aos seguintes trabalhadores, agradecendo todo o empenho e contributo:\n\n${leavingEmployees.join(
+          "\n\n"
+        )}`
       );
       setIsByeModalVisible(true);
     }
@@ -102,7 +103,7 @@ const NotificationScheduler: React.FC = () => {
       )}
       {isByeModalVisible && (
         <GreetingModal
-          title="Despedida da DGADR"
+          title=""
           message={byeMsg}
           modalVisible={isByeModalVisible}
           setModalVisible={() => setIsByeModalVisible(false)}

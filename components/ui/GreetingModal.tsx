@@ -39,7 +39,7 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
   if (distribute) {
     position = title === "Despedida da DGADR" ? "flex-end" : "flex-start";
   } else {
-    position = "center";
+    position = "flex-start";
   }
 
   return (
@@ -70,13 +70,14 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     marginTop: "20%",
   },
   modalView: {
     margin: "5%",
-    backgroundColor: "white",
+    height: "50%",
+    backgroundColor: "#E0F2F1",
     borderRadius: 20,
     padding: "5%",
     alignItems: "center",
@@ -95,10 +96,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonClose: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "white",
   },
   textStyle: {
-    color: "white",
+    color: "black",
     fontWeight: "bold",
     textAlign: "center",
     fontSize: 6 * scaleFactor,
@@ -106,13 +107,15 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: "5%",
     textAlign: "center",
-    fontSize: 6 * scaleFactor,
+    color: "#0D47A1",
+    fontSize: 16 * scaleFactor,
   },
   modalTitle: {
     marginBottom: "5%",
     textAlign: "center",
     fontWeight: "bold",
-    fontSize: 8 * scaleFactor,
+    color: "#0D47A1",
+    fontSize: 18 * scaleFactor,
   },
 });
 
