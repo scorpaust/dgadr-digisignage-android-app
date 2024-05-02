@@ -36,12 +36,6 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
     | "space-evenly"
     | undefined;
 
-  if (distribute) {
-    position = title === "Despedida da DGADR" ? "flex-end" : "flex-start";
-  } else {
-    position = "flex-start";
-  }
-
   return (
     <Modal
       animationType="slide"
@@ -71,12 +65,11 @@ const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
     justifyContent: "flex-start",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginTop: "20%",
   },
   modalView: {
     margin: "5%",
-    height: "50%",
     backgroundColor: "#E0F2F1",
     borderRadius: 20,
     padding: "5%",

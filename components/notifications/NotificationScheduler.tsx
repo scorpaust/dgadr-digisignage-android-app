@@ -50,9 +50,7 @@ const NotificationScheduler: React.FC = () => {
         employee.startYear &&
         new Date(employee.endDate).getFullYear() === currentYear
       ) {
-        leavingEmployees.push(
-          `${employee.name} (${employee.startYear}-${currentYear})`
-        );
+        leavingEmployees.push(`${employee.name}`);
       }
     });
 

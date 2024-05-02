@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState, memo } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -95,7 +95,7 @@ const RenderItem: React.FC<{ item: MediaItem }> = ({ item }) => {
           onPressOut={onImagePressOut}
         >
           <Animated.Image
-            source={item.uri}
+            source={{ uri: item.uri }}
             style={[
               styles.media,
               { transform: [{ scale }] },
