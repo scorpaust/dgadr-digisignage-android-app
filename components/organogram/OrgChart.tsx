@@ -5,6 +5,7 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
+  View,
 } from "react-native";
 import Svg, {
   Rect,
@@ -36,9 +37,9 @@ const scaleFactor = windowWidth / 800;
 // Constants
 const horizontalSpacing = 200 * scaleFactor;
 const verticalSpacing = 150 * scaleFactor;
-const nodeWidth = 150 * scaleFactor;
-const nodeHeight = 80 * scaleFactor;
-const fontSize = 8 * scaleFactor;
+const nodeWidth = 190 * scaleFactor;
+const nodeHeight = 100 * scaleFactor;
+const fontSize = 12 * scaleFactor;
 
 // Get device window dimensions
 const window = Dimensions.get("window");
@@ -78,7 +79,7 @@ const renderNode = (
         width={nodeWidth}
         height={nodeHeight}
         fill="lightblue"
-        onPress={() => Alert.alert(`Pressed on ${node.name}`)}
+        onPress={() => Alert.alert(`Informação`, `Clicou em ${node.name}`)}
       />
       {/*<Image
         href={{ uri: node.imageUrl }}
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
   text: {
     backgroundColor: "white", // White text color for contrast against the rect color
     fontWeight: "bold",
-    fontSize: 12, // Slightly larger font size for readability
+    fontSize: 12 * scaleFactor, // Slightly larger font size for readability
   },
   // Style for SVG Lines to make them visually appealing
   line: {

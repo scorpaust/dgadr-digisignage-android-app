@@ -8,13 +8,13 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#f5428d",
     onPress: "MissionScreen",
   },*/
-  /*{
+  {
     id: "1",
     icon: "organization",
     title: "Organograma",
     color: "#368dff",
     onPress: "OrganogramScreen",
-  },*/
+  },
   {
     id: "2",
     icon: "time-outline",
@@ -49,12 +49,12 @@ export const MENU_ITEMS: MenuItem[] = [
     title: "Galeria",
     color: "#f5a442",
     onPress: "MediaScreen",
-  } /*,
+  },
   {
     id: "7",
     icon: "calendar-outline",
     title: "Eventos",
     color: "#f5428d",
     onPress: "EventsScreen",
-  },*/,
+  },
 ];

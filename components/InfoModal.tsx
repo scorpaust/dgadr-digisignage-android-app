@@ -3,7 +3,8 @@ import React, { SetStateAction } from "react";
 import { Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 
 interface InfoModalProps {
-  info: SetStateAction<FirebaseError | undefined>;
+  info?: SetStateAction<FirebaseError | undefined>;
+  text?: String;
   onClose: () => void;
 }
 
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   text: {
-    fontSize: 8 * scaleFactor,
+    fontSize: 22 * scaleFactor,
     textAlign: "justify",
   },
 });

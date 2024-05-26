@@ -1,3 +1,5 @@
+import { ImageSourcePropType } from "react-native/types";
+
 export type EventItemType = {
   id: string;
   title: string;
@@ -5,5 +7,5 @@ export type EventItemType = {
   summary: string;
   date: string;
   time: string;
-  imgUrl: NodeRequire;
+  imgUrl: ImageSourcePropType;
 };

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   Dimensions,
   Image,
+  Modal,
   StyleProp,
   StyleSheet,
   View,
@@ -24,6 +25,12 @@ import UsefulLinksScreen from "./screens/UsefulLinksScreen";
 import OrganogramScreen from "./screens/OrganogramScreen";
 import EventsScreen from "./screens/EventsScreen";
 import NotificationScheduler from "./components/notifications/NotificationScheduler";
+import { useEffect, useState } from "react";
+import {
+  EventModal,
+  eventsData,
+  getUpcomingEvents,
+} from "./components/events/EventModal";
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -147,7 +154,7 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {/*<Stack.Screen
+      <Stack.Screen
         name="EventsScreen"
         component={EventsScreen}
         options={{
@@ -158,7 +165,7 @@ function StackScreen() {
           },
           headerBackVisible: false,
         }}
-      />*/}
+      />
     </Stack.Navigator>
   );
 }
@@ -192,7 +199,7 @@ function TabScreen() {
           tabBarIcon: () => <Ionicons name="business-outline" style={styles.icon} size={20 * scaleFactor} color="black" />,
           tabBarLabel: "DGADR",          
         }} />*/}
-      {/*<Tab.Screen
+      <Tab.Screen
         name="Organograma"
         component={OrganogramScreen}
         options={{
@@ -206,7 +213,7 @@ function TabScreen() {
           ),
           tabBarLabel: "",
         }}
-      />*/}
+      />
       <Tab.Screen
         name="MediaScreen"
         component={MediaScreen}
@@ -286,7 +293,7 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
-      {/*<Tab.Screen
+      <Tab.Screen
         name="EventsScreen"
         component={EventsScreen}
         options={{
@@ -300,15 +307,56 @@ function TabScreen() {
           ),
           tabBarLabel: "",
         }}
-      />*/}
+      />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const upcomingEvents = getUpcomingEvents(eventsData);
+
+  useEffect(() => {
+    if (upcomingEvents.length > 0) {
+      setModalVisible(true);
+    }
+  }, []);
+
+  const onCloseHandler = () => {
+    setModalVisible(false);
+  };
+
+  const showNext =
+    selectedEventIndex !== null &&
+    selectedEventIndex < upcomingEvents.length - 1;
+  const showPrevious = selectedEventIndex !== null && selectedEventIndex > 0;
+
+  const selectedEvent =
+    selectedEventIndex !== null ? upcomingEvents[selectedEventIndex] : null;
+
   return (
     <SafeAreaProvider>
       <NotificationScheduler />
+      <View>
+        {modalVisible && selectedEvent && (
+          <Modal
+            visible={modalVisible}
+            transparent={true}
+            onRequestClose={onCloseHandler}
+          >
+            <EventModal
+              event={selectedEvent}
+              onClose={onCloseHandler}
+              onNext={() => setSelectedEventIndex(selectedEventIndex + 1)}
+              onPrevious={() => setSelectedEventIndex(selectedEventIndex - 1)}
+              showNext={showNext}
+              showPrevious={showPrevious}
+            />
+          </Modal>
+        )}
+      </View>
       <NavigationContainer>
         <TabScreen />
       </NavigationContainer>
