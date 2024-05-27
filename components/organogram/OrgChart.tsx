@@ -32,7 +32,7 @@ interface TreeNode {
 
 const windowWidth = Dimensions.get("window").width;
 
-const scaleFactor = windowWidth / 800;
+const scaleFactor = windowWidth / 400;
 
 // Constants
 const horizontalSpacing = 200 * scaleFactor;
