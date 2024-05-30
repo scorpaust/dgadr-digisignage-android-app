@@ -86,6 +86,20 @@ const NotificationScheduler: React.FC = () => {
     return date1 === date2;
   }
 
+  const handleCloseWelcomeModal = () => {
+    setIsWelcomeModalVisible(false);
+    setTimeout(() => {
+      setIsWelcomeModalVisible(true);
+    }, 10000); // 10 seconds
+  };
+
+  const handleCloseByeModal = () => {
+    setIsByeModalVisible(false);
+    setTimeout(() => {
+      setIsByeModalVisible(true);
+    }, 10000); // 10 seconds
+  };
+
   const distribute: boolean = isWelcomeModalVisible && isByeModalVisible;
 
   return (
@@ -95,16 +109,16 @@ const NotificationScheduler: React.FC = () => {
           title="Bem vindos à DGADR"
           message={welcomeMsg}
           modalVisible={isWelcomeModalVisible}
-          setModalVisible={() => setIsWelcomeModalVisible(false)}
+          setModalVisible={handleCloseWelcomeModal}
           distribute={distribute}
         />
       )}
       {isByeModalVisible && (
         <GreetingModal
-          title=""
+          title="Despedida"
           message={byeMsg}
           modalVisible={isByeModalVisible}
-          setModalVisible={() => setIsByeModalVisible(false)}
+          setModalVisible={handleCloseByeModal}
           distribute={distribute}
         />
       )}

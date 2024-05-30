@@ -31,6 +31,7 @@ import {
   eventsData,
   getUpcomingEvents,
 } from "./components/events/EventModal";
+import ProjectsScreen from "./screens/ProjectsScreen";
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -108,7 +109,7 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {
+      {/*
         <Stack.Screen
           name="OrganogramScreen"
           component={OrganogramScreen}
@@ -121,7 +122,7 @@ function StackScreen() {
             headerBackVisible: false,
           }}
         />
-      }
+        */}
       <Stack.Screen
         name="ComplaintScreen"
         component={ComplaintScreen}
@@ -134,14 +135,18 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {/*<Stack.Screen name="ProjectsScreen" component={ProjectsScreen} options={{
-          title: 'Projetos Cofinanciados',
+      <Stack.Screen
+        name="ProjectsScreen"
+        component={ProjectsScreen}
+        options={{
+          title: "Projetos Cofinanciados",
           headerLeft: () => <BackButton />,
           headerTitleStyle: {
-            fontSize: 24 * scaleFactor
+            fontSize: 24 * scaleFactor,
           },
-          headerBackVisible: false
-        }} />*/}
+          headerBackVisible: false,
+        }}
+      />
       <Stack.Screen
         name="UsefulLinksScreen"
         component={UsefulLinksScreen}
@@ -154,7 +159,7 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      <Stack.Screen
+      {/*<Stack.Screen
         name="EventsScreen"
         component={EventsScreen}
         options={{
@@ -165,7 +170,7 @@ function StackScreen() {
           },
           headerBackVisible: false,
         }}
-      />
+      />*/}
     </Stack.Navigator>
   );
 }
@@ -199,7 +204,7 @@ function TabScreen() {
           tabBarIcon: () => <Ionicons name="business-outline" style={styles.icon} size={20 * scaleFactor} color="black" />,
           tabBarLabel: "DGADR",          
         }} />*/}
-      <Tab.Screen
+      {/*<Tab.Screen
         name="Organograma"
         component={OrganogramScreen}
         options={{
@@ -213,7 +218,7 @@ function TabScreen() {
           ),
           tabBarLabel: "",
         }}
-      />
+      />*/}
       <Tab.Screen
         name="MediaScreen"
         component={MediaScreen}
@@ -259,10 +264,21 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
-      {/*<Tab.Screen name="ProjectsScreen" component={ProjectsScreen} options={{
-          tabBarIcon: () => <Ionicons name="documents" style={styles.icon} size={20 * scaleFactor} color="black" />,
+      <Tab.Screen
+        name="ProjectsScreen"
+        component={ProjectsScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="documents"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
           tabBarLabel: "",
-        }} />*/}
+        }}
+      />
       <Tab.Screen
         name="Menu"
         component={StackScreen}
@@ -293,7 +309,7 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
-      <Tab.Screen
+      {/*<Tab.Screen
         name="EventsScreen"
         component={EventsScreen}
         options={{
@@ -307,7 +323,7 @@ function TabScreen() {
           ),
           tabBarLabel: "",
         }}
-      />
+      />*/}
     </Tab.Navigator>
   );
 }
@@ -339,7 +355,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NotificationScheduler />
-      <View>
+      {/*<View>
         {modalVisible && selectedEvent && (
           <Modal
             visible={modalVisible}
@@ -356,7 +372,7 @@ export default function App() {
             />
           </Modal>
         )}
-      </View>
+        </View>*/}
       <NavigationContainer>
         <TabScreen />
       </NavigationContainer>

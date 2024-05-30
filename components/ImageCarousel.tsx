@@ -1,15 +1,17 @@
-import React from 'react';
-import { View, Image, Dimensions, StyleSheet } from 'react-native';
-import Carousel from 'react-native-snap-carousel';
+import React from "react";
+import { View, Image, Dimensions, StyleSheet } from "react-native";
+import Carousel from "react-native-snap-carousel";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
-const windowWidth = Dimensions.get('window').width;
+const windowWidth = Dimensions.get("window").width;
 
-const scaleFactor = windowWidth / 320; 
+const scaleFactor = windowWidth / 320;
 
 interface ImageCarouselProps {
   imageLinks: string[];
+  autoplay?: boolean;
+  autoplayInterval?: number | undefined;
 }
 
 interface CarouselItem {
@@ -17,17 +19,21 @@ interface CarouselItem {
   index: number;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({ imageLinks }) => {
-    const renderItem = ({ item }: { item: any }, index: number) => {
-        return (
-          <View style={styles.item} key={index}>
-            <Image
-              source={item}  // Changed here
-              style={styles.image}
-            />
-          </View>
-        );
-      };
+const ImageCarousel: React.FC<ImageCarouselProps> = ({
+  imageLinks,
+  autoplay,
+  autoplayInterval,
+}) => {
+  const renderItem = ({ item }: { item: any }, index: number) => {
+    return (
+      <View style={styles.item} key={index}>
+        <Image
+          source={item} // Changed here
+          style={styles.image}
+        />
+      </View>
+    );
+  };
 
   return (
     <Carousel
@@ -37,23 +43,24 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ imageLinks }) => {
       itemWidth={screenWidth}
       vertical={false}
       loop={false}
-      autoplay={false}
+      autoplay={autoplay}
+      autoplayInterval={autoplayInterval}
     />
   );
 };
 
 const styles = StyleSheet.create({
   item: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: '5%'
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: "5%",
   },
   image: {
-    width: '100%',
-    height: 200 * scaleFactor,
-    resizeMode: 'cover',
+    width: "100%",
+    height: 350 * scaleFactor,
+    resizeMode: "contain",
   },
 });
 

@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   StyleSheet,
@@ -51,7 +50,7 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
           <Text style={styles.modalText}>{message}</Text>
           <Pressable
             style={[styles.button, styles.buttonClose]}
-            onPress={() => setModalVisible(!modalVisible)}
+            onPress={() => setModalVisible(false)}
           >
             <Text style={styles.textStyle}>Fechar</Text>
           </Pressable>

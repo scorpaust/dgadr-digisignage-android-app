@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, SetStateAction } from "react";
+import useEffect from "react";
 import {
   ScrollView,
   Alert,
@@ -6,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   View,
+  GestureResponderEvent,
 } from "react-native";
 import Svg, {
   Rect,
@@ -79,7 +81,7 @@ const renderNode = (
         width={nodeWidth}
         height={nodeHeight}
         fill="lightblue"
-        onPress={() => Alert.alert(`Informação`, `Clicou em ${node.name}`)}
+        onPress={() => Alert.alert("Informação", `Clicou em ${node.title}!`)}
       />
       {/*<Image
         href={{ uri: node.imageUrl }}
@@ -134,10 +136,12 @@ const renderNode = (
 };
 
 const OrgChart: React.FC = () => {
+  const [activeNodes, setActiveNodes] = useState<number[]>([0, 0, 0, 0]);
+
   const data: TreeNode = {
     name: "Rogério Ferreira",
     title: "DIRETOR-GERAL",
-    imageUrl: "https://www.dgadr.gov.pt/images/foto_dir/foto_DG.jpg",
+    imageUrl: "",
     children: [
       {
         name: "Catarina Cunha",
@@ -168,6 +172,26 @@ const OrgChart: React.FC = () => {
             name: "Paulo Freitas",
             title: "DSIGA",
             imageUrl: "",
+            children:
+              activeNodes == [1, 0, 0, 0]
+                ? [
+                    {
+                      name: "Catarina Ribeiro",
+                      title: "DORH",
+                      imageUrl: "",
+                    },
+                    {
+                      name: "Diogo Ferreira",
+                      title: "DGF",
+                      imageUrl: "",
+                    },
+                    {
+                      name: "Rosália Martins",
+                      title: "DPGI",
+                      imageUrl: "",
+                    },
+                  ]
+                : undefined,
           },
           {
             name: "Sandra Candeias",

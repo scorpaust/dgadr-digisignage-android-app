@@ -8,13 +8,13 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#f5428d",
     onPress: "MissionScreen",
   },*/
-  {
+  /*{
     id: "1",
     icon: "organization",
     title: "Organograma",
     color: "#368dff",
     onPress: "OrganogramScreen",
-  },
+  },*/
   {
     id: "2",
     icon: "time-outline",
@@ -29,13 +29,13 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#fddd03",
     onPress: "ComplaintScreen",
   },
-  /*{
+  {
     id: "4",
     icon: "documents",
     title: "Projetos Cofinanciados",
     color: "#7fffcc",
-    onPress: "ProjectsScreen"
-  },*/
+    onPress: "ProjectsScreen",
+  },
   {
     id: "5",
     icon: "link",
@@ -50,11 +50,11 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#f5a442",
     onPress: "MediaScreen",
   },
-  {
+  /*{
     id: "7",
     icon: "calendar-outline",
     title: "Eventos",
     color: "#f5428d",
     onPress: "EventsScreen",
-  },
+  },*/
 ];
