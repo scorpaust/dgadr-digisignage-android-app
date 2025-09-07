@@ -38,6 +38,7 @@ import { NewsTicker } from "./components/news/NewsTicker";
 import { getLastFetchTime, saveLastFetchTime } from "./utils/asyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { latestSlotBefore, SLOT_KEY } from "./utils/slots";
+import LibFeatScreen from "./screens/LibFeatScreen";
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -115,6 +116,18 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
+      <Stack.Screen
+        name="LibFeatScreen"
+        component={LibFeatScreen}
+        options={{
+          title: "Destaques da Biblioteca",
+          headerLeft: () => <BackButton />,
+          headerTitleStyle: {
+            fontSize: 24 * scaleFactor,
+          },
+          headerBackVisible: false,
+        }}
+      />
       {/*
         <Stack.Screen
           name="OrganogramScreen"
@@ -165,7 +178,7 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {
+      {/*{
         <Stack.Screen
           name="EventsScreen"
           component={EventsScreen}
@@ -178,7 +191,7 @@ function StackScreen() {
             headerBackVisible: false,
           }}
         />
-      }
+      }*/}
     </Stack.Navigator>
   );
 }
@@ -234,6 +247,21 @@ function TabScreen() {
           tabBarIcon: () => (
             <Ionicons
               name="images"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="LibFeatScreen"
+        component={LibFeatScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="barcode"
               style={styles.icon}
               size={20 * scaleFactor}
               color="black"
@@ -317,7 +345,7 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
-      {
+      {/*{
         <Tab.Screen
           name="EventsScreen"
           component={EventsScreen}
@@ -333,7 +361,7 @@ function TabScreen() {
             tabBarLabel: "",
           }}
         />
-      }
+      }*/}
     </Tab.Navigator>
   );
 }

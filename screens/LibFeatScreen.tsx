@@ -10,7 +10,7 @@ import { FirebaseError } from "firebase/app";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-const MediaScreen = () => {
+const LibFeatScreen = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [error, setError] =
     useState<SetStateAction<FirebaseError | undefined>>(undefined);
@@ -44,7 +44,7 @@ const MediaScreen = () => {
         firebase,
         "gs://dgadr-digisignage-app.appspot.com"
       );
-      const listRef = ref(storage, "photos");
+      const listRef = ref(storage, "destaques_biblio");
 
       const res = await listAll(listRef);
       const urlPromises = res.items.map(async (itemRef, index) => {
@@ -113,5 +113,4 @@ const MediaScreen = () => {
   );
 };
 
-export default MediaScreen;
-
+export default LibFeatScreen;

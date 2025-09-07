@@ -50,11 +50,18 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#f5a442",
     onPress: "MediaScreen",
   },
-  {
+  /*{
     id: "7",
     icon: "calendar-outline",
     title: "Eventos",
     color: "#f5428d",
     onPress: "EventsScreen",
+  },*/
+  {
+    id: "8",
+    icon: "barcode",
+    title: "Destaques da Biblioteca",
+    color: "#E33332",
+    onPress: "LibFeatScreen",
   },
 ];
