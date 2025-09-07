@@ -6,6 +6,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { AVPlaybackStatus, ResizeMode, Video } from "expo-av";
 import Carousel from "react-native-snap-carousel";
@@ -13,80 +14,44 @@ import { MediaItem } from "../types/media-item";
 
 const resMode = ResizeMode.CONTAIN;
 
-type MediaGalleryProps = {
-  mediaItems: MediaItem[];
-};
-
 const windowWidth = Dimensions.get("window").width;
-
+const windowHeight = Dimensions.get("window").height;
 const scaleFactor = windowWidth / 320;
-
-var isVideo = false;
 
 const RenderItem: React.FC<{ item: MediaItem }> = ({ item }) => {
   const videoRef = useRef<Video>(null);
-
-  const scale = useRef(new Animated.Value(1)).current; // Initial scale is 1
+  const scale = useRef(new Animated.Value(1)).current;
 
   const onImagePressIn = () => {
     Animated.spring(scale, {
-      toValue: 1.3, // Zoom in to 130% of the size
-      useNativeDriver: true, // Use native driver for better performance
+      toValue: 1.3,
+      useNativeDriver: true,
     }).start();
   };
 
   const onImagePressOut = () => {
     Animated.spring(scale, {
-      toValue: 1, // Return to original size
+      toValue: 1,
       useNativeDriver: true,
     }).start();
   };
 
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
-
-  const handlePlayVideo = useCallback((id: string) => {
-    setPlayingVideoId(id);
-  }, []);
-
   const [isMediaLoaded, setMediaLoaded] = useState(false);
 
   const onLoadMedia = () => setMediaLoaded(true);
-
   const onErrorMedia = () => setMediaLoaded(false);
 
-  const onPlaybackStatusUpdate = (playbackStatus: AVPlaybackStatus) => {
-    if (!playbackStatus.isLoaded) {
-      // Video is still loading
-    } else {
-      // Video is loaded
-      if (!playbackStatus.isPlaying) {
-        videoRef.current?.playAsync();
-      }
-    }
-  };
-
   useEffect(() => {
-    if (item.type === "video") {
-      isVideo = true;
-    } else {
-      isVideo = false;
-    }
-
-    if (
-      item.type === "video" &&
-      playingVideoId !== item.id &&
-      videoRef.current
-    ) {
+    if (item.type === "video" && videoRef.current) {
       videoRef.current.pauseAsync();
     }
-  }, [playingVideoId, item]);
+  }, [item]);
 
   return (
     <View style={styles.mediaContainer}>
       {!isMediaLoaded && (
         <View style={styles.placeholderContainer}>
           <ActivityIndicator size="large" color="#000000" />
-          {/* Or use a custom placeholder component */}
         </View>
       )}
       {item.type === "photo" ? (
@@ -101,6 +66,7 @@ const RenderItem: React.FC<{ item: MediaItem }> = ({ item }) => {
               { transform: [{ scale }] },
               isMediaLoaded ? {} : styles.hidden,
             ]}
+            resizeMode="contain"
             onLoad={onLoadMedia}
             onError={onErrorMedia}
           />
@@ -108,15 +74,11 @@ const RenderItem: React.FC<{ item: MediaItem }> = ({ item }) => {
       ) : (
         <Video
           ref={videoRef}
-          isMuted={true}
           source={item.uri as any}
-          rate={1.0}
-          volume={0}
           resizeMode={resMode}
-          shouldPlay={playingVideoId === item.id}
-          isLooping
           style={[styles.media, isMediaLoaded ? {} : styles.hidden]}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+          shouldPlay={false}
+          isLooping
           onLoad={onLoadMedia}
           onError={onErrorMedia}
         />
@@ -125,46 +87,20 @@ const RenderItem: React.FC<{ item: MediaItem }> = ({ item }) => {
   );
 };
 
-const MediaGallery: React.FC<MediaGalleryProps> = ({ mediaItems }) => {
-  // const [paused, setIsPaused] = useState(false);
-  // const [autoplay, setAutoPlay] = useState(true);
-
-  const windowWidth = Dimensions.get("window").width;
-  const scaleFactor = windowWidth / 320;
-
-  /*useEffect(() => {
-    setAutoPlay(!paused);
-  }, [paused]);*/
-
+const MediaGallery: React.FC<{ mediaItems: MediaItem[] }> = ({
+  mediaItems,
+}) => {
   return (
-    <>
-      {/*{autoplay && (*/}
-      <Carousel
-        data={mediaItems}
-        renderItem={({ item }) => <RenderItem item={item} />}
-        //sliderWidth={Dimensions.get('window').width}
-        sliderHeight={Dimensions.get("window").height}
-        itemHeight={300 * scaleFactor}
-        autoplay={true} // Enable automatic play
-        loop={!isVideo} // Loop through the items indefinitely
-        autoplayInterval={10000}
-        vertical
-      />
-      {/*})}*/}
-      {/*{!autoplay && (
-        <Carousel
-          data={mediaItems}
-          renderItem={({ item }) => <RenderItem item={item} />}
-          //sliderWidth={Dimensions.get('window').width}
-          sliderHeight={Dimensions.get("window").height}
-          itemHeight={300 * scaleFactor}
-          autoplay={false} // Enable automatic play
-          loop={!isVideo} // Loop through the items indefinitely
-          vertical
-        />
-      )}*/}
-      {/*<BaseButton paused={paused} onPress={() => { setIsPaused(!paused); setAutoPlay(paused)}} />*/}
-    </>
+    <Carousel
+      data={mediaItems}
+      renderItem={({ item }) => <RenderItem item={item} />}
+      sliderWidth={windowWidth}
+      itemWidth={windowWidth * 0.9}
+      autoplay={true}
+      autoplayInterval={10000}
+      loop={true}
+      horizontal
+    />
   );
 };
 
@@ -172,14 +108,13 @@ const styles = StyleSheet.create({
   mediaContainer: {
     justifyContent: "center",
     alignItems: "center",
-    width: "95%",
-    height: "95%",
-    marginHorizontal: 5 * (Dimensions.get("window").width / 320),
+    width: "100%",
+    height: windowHeight * 0.8,
   },
   media: {
     width: "90%",
     height: "90%",
-    marginHorizontal: 5 * (Dimensions.get("window").width / 320),
+    marginHorizontal: 5 * scaleFactor,
   },
   hidden: {
     display: "none",
@@ -189,7 +124,7 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#e0e0e0", // Placeholder background color
+    backgroundColor: "#e0e0e0",
   },
 });
 

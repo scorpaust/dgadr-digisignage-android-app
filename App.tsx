@@ -32,6 +32,12 @@ import {
   getUpcomingEvents,
 } from "./components/events/EventModal";
 import ProjectsScreen from "./screens/ProjectsScreen";
+import { fetchAgricultureNews } from "./utils/fetchAgricultureNews";
+import { registerBackgroundFetch } from "./utils/backgroundFetch";
+import { NewsTicker } from "./components/news/NewsTicker";
+import { getLastFetchTime, saveLastFetchTime } from "./utils/asyncStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { latestSlotBefore, SLOT_KEY } from "./utils/slots";
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -159,18 +165,20 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {/*<Stack.Screen
-        name="EventsScreen"
-        component={EventsScreen}
-        options={{
-          title: "Eventos",
-          headerLeft: () => <BackButton />,
-          headerTitleStyle: {
-            fontSize: 24 * scaleFactor,
-          },
-          headerBackVisible: false,
-        }}
-      />*/}
+      {
+        <Stack.Screen
+          name="EventsScreen"
+          component={EventsScreen}
+          options={{
+            title: "Eventos",
+            headerLeft: () => <BackButton />,
+            headerTitleStyle: {
+              fontSize: 24 * scaleFactor,
+            },
+            headerBackVisible: false,
+          }}
+        />
+      }
     </Stack.Navigator>
   );
 }
@@ -309,21 +317,23 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
-      {/*<Tab.Screen
-        name="EventsScreen"
-        component={EventsScreen}
-        options={{
-          tabBarIcon: () => (
-            <Ionicons
-              name="calendar-outline"
-              style={styles.icon}
-              size={20 * scaleFactor}
-              color="black"
-            />
-          ),
-          tabBarLabel: "",
-        }}
-      />*/}
+      {
+        <Tab.Screen
+          name="EventsScreen"
+          component={EventsScreen}
+          options={{
+            tabBarIcon: () => (
+              <Ionicons
+                name="calendar-outline"
+                style={styles.icon}
+                size={20 * scaleFactor}
+                color="black"
+              />
+            ),
+            tabBarLabel: "",
+          }}
+        />
+      }
     </Tab.Navigator>
   );
 }
@@ -331,6 +341,37 @@ function TabScreen() {
 export default function App() {
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const [headlines, setHeadlines] = useState<string[]>([]);
+
+  const loadHeadlines = async () => {
+    const cached = await AsyncStorage.getItem("latestHeadlines");
+    if (cached) setHeadlines(JSON.parse(cached));
+    else {
+      const fresh = await fetchAgricultureNews();
+      setHeadlines(fresh);
+      await AsyncStorage.setItem("latestHeadlines", JSON.stringify(fresh));
+      await saveLastFetchTime();
+    }
+  };
+
+  useEffect(() => {
+    const tryCatchUp = async () => {
+      const slotISO = latestSlotBefore(new Date()).toISOString();
+      const lastSlotISO = await AsyncStorage.getItem(SLOT_KEY);
+      if (lastSlotISO !== slotISO) {
+        const news = await fetchAgricultureNews();
+        await AsyncStorage.setItem("latestHeadlines", JSON.stringify(news));
+        await AsyncStorage.setItem(SLOT_KEY, slotISO);
+        setHeadlines(news);
+      } else {
+        const cached = await AsyncStorage.getItem("latestHeadlines");
+        if (cached) setHeadlines(JSON.parse(cached));
+      }
+    };
+    tryCatchUp();
+    registerBackgroundFetch();
+  }, []);
 
   const upcomingEvents = getUpcomingEvents(eventsData);
 
@@ -376,6 +417,7 @@ export default function App() {
       <NavigationContainer>
         <TabScreen />
       </NavigationContainer>
+      <NewsTicker headlines={headlines} speedPxPerSec={20} />
     </SafeAreaProvider>
   );
 }

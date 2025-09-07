@@ -6,6 +6,7 @@ import {
   Pressable,
   View,
   Dimensions,
+  ScrollView,
 } from "react-native";
 
 interface GreetingModalProps {
@@ -26,14 +27,15 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
   message,
   distribute,
 }) => {
-  let position:
-    | "center"
-    | "flex-start"
-    | "flex-end"
-    | "space-between"
-    | "space-around"
-    | "space-evenly"
-    | undefined;
+  const [fontSize, setFontSize] = useState(16 * scaleFactor);
+
+  useEffect(() => {
+    if (message.length > 200) {
+      setFontSize(12 * scaleFactor);
+    } else {
+      setFontSize(16 * scaleFactor);
+    }
+  }, [message]);
 
   return (
     <Modal
@@ -44,10 +46,14 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
         setModalVisible(!modalVisible);
       }}
     >
-      <View style={[styles.centeredView, { justifyContent: position }]}>
+      <View style={[styles.centeredView]}>
         <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>{title}</Text>
-          <Text style={styles.modalText}>{message}</Text>
+          <Text style={[styles.modalTitle, { fontSize: fontSize * 1.2 }]}>
+            {title}
+          </Text>
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <Text style={[styles.modalText, { fontSize }]}>{message}</Text>
+          </ScrollView>
           <Pressable
             style={[styles.button, styles.buttonClose]}
             onPress={() => setModalVisible(false)}
@@ -63,9 +69,8 @@ const GreetingModal: React.FC<GreetingModalProps> = ({
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    marginTop: "20%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalView: {
     margin: "5%",
@@ -81,6 +86,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    width: "90%",
+    maxHeight: "80%",
   },
   button: {
     borderRadius: 20,
@@ -89,6 +96,7 @@ const styles = StyleSheet.create({
   },
   buttonClose: {
     backgroundColor: "white",
+    marginTop: 10,
   },
   textStyle: {
     color: "black",
@@ -97,17 +105,16 @@ const styles = StyleSheet.create({
     fontSize: 6 * scaleFactor,
   },
   modalText: {
-    marginBottom: "5%",
     textAlign: "center",
     color: "#0D47A1",
-    fontSize: 16 * scaleFactor,
   },
   modalTitle: {
-    marginBottom: "5%",
     textAlign: "center",
     fontWeight: "bold",
     color: "#0D47A1",
-    fontSize: 18 * scaleFactor,
+  },
+  scrollViewContent: {
+    paddingVertical: 10,
   },
 });
 
