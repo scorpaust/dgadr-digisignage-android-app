@@ -1,6 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
+  AppState,
   Dimensions,
   Image,
   Modal,
@@ -372,35 +373,60 @@ export default function App() {
 
   const [headlines, setHeadlines] = useState<string[]>([]);
 
-  const loadHeadlines = async () => {
-    const cached = await AsyncStorage.getItem("latestHeadlines");
-    if (cached) setHeadlines(JSON.parse(cached));
-    else {
-      const fresh = await fetchAgricultureNews();
-      setHeadlines(fresh);
-      await AsyncStorage.setItem("latestHeadlines", JSON.stringify(fresh));
-      await saveLastFetchTime();
-    }
-  };
-
   useEffect(() => {
-    const tryCatchUp = async () => {
-      const slotISO = latestSlotBefore(new Date()).toISOString();
-      const lastSlotISO = await AsyncStorage.getItem(SLOT_KEY);
-      if (lastSlotISO !== slotISO) {
-        const news = await fetchAgricultureNews();
-        await AsyncStorage.setItem("latestHeadlines", JSON.stringify(news));
-        await AsyncStorage.setItem(SLOT_KEY, slotISO);
-        setHeadlines(news);
-      } else {
+    let mounted = true;
+
+    const readCached = async () => {
+      try {
         const cached = await AsyncStorage.getItem("latestHeadlines");
-        if (cached) setHeadlines(JSON.parse(cached));
+        return cached ? (JSON.parse(cached) as string[]) : [];
+      } catch {
+        return [];
       }
     };
-    tryCatchUp();
-    registerBackgroundFetch();
-  }, []);
 
+    const tryCatchUp = async () => {
+      try {
+        const slotISO = latestSlotBefore(new Date()).toISOString();
+        const lastSlotISO = await AsyncStorage.getItem(SLOT_KEY);
+
+        if (lastSlotISO !== slotISO) {
+          const news = await fetchAgricultureNews();
+          if (news.length) {
+            await AsyncStorage.setItem("latestHeadlines", JSON.stringify(news));
+            await AsyncStorage.setItem(SLOT_KEY, slotISO);
+            if (mounted) setHeadlines(news);
+            return;
+          }
+        }
+        // fallback ao cache
+        const cached = await readCached();
+        if (mounted && cached.length) setHeadlines(cached);
+      } catch (e) {
+        const cached = await readCached();
+        if (mounted && cached.length) setHeadlines(cached);
+        console.warn("tryCatchUp error:", e);
+      }
+    };
+
+    // 1) no arranque
+    tryCatchUp();
+
+    // 2) ao voltar ao foreground
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s === "active") tryCatchUp();
+    });
+
+    // 3) registo do background fetch
+    registerBackgroundFetch().catch((e) =>
+      console.warn("registerBackgroundFetch failed:", e)
+    );
+
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
   const upcomingEvents = getUpcomingEvents(eventsData);
 
   useEffect(() => {
@@ -445,7 +471,7 @@ export default function App() {
       <NavigationContainer>
         <TabScreen />
       </NavigationContainer>
-      <NewsTicker headlines={headlines} speedPxPerSec={20} />
+      {/*<NewsTicker headlines={headlines} speedPxPerSec={20} />*/}
     </SafeAreaProvider>
   );
 }
