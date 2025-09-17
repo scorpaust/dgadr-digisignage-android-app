@@ -18,9 +18,13 @@ if (!TaskManager.isTaskDefined(BACKGROUND_TASK)) {
       }
 
       const headlines = await fetchAgricultureNews();
-      await AsyncStorage.setItem("latestHeadlines", JSON.stringify(headlines));
-      await AsyncStorage.setItem(SLOT_KEY, slotISO);
-      return BackgroundFetch.BackgroundFetchResult.NewData;
+      if (headlines.length) {
+        await AsyncStorage.setItem("latestHeadlines", JSON.stringify(headlines));
+        await AsyncStorage.setItem(SLOT_KEY, slotISO);
+        return BackgroundFetch.BackgroundFetchResult.NewData;
+      }
+
+      return BackgroundFetch.BackgroundFetchResult.NoData;
     } catch (e) {
       console.error("BG task error:", e);
       return BackgroundFetch.BackgroundFetchResult.Failed;

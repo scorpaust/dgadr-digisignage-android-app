@@ -1,5 +1,6 @@
 // app.config.ts
 import { ConfigContext, ExpoConfig } from "expo/config";
+import { PermissionsAndroid } from "react-native";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,

@@ -1,95 +1,133 @@
-// NewsTicker.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Animated, Text, StyleSheet, Dimensions } from "react-native";
-import { Easing } from "react-native";
-
-// px/seg (ajusta a gosto: 80–140 costuma ser bom)
-const SPEED_PX_PER_SEC = 2;
+import {
+  View,
+  Animated,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Easing,
+} from "react-native";
 
 const { width: winW } = Dimensions.get("window");
 const scale = winW / 320;
+const SEP = "   •   ";
 
 type Props = { headlines: string[]; speedPxPerSec?: number };
 
-export const NewsTicker = ({ headlines, speedPxPerSec = 40 }: Props) => {
-  const SEP = "   •   ";
+export const NewsTicker = ({ headlines, speedPxPerSec = 30 }: Props) => {
+  // 1) conteúdo base
+  const raw = useMemo(
+    () => (headlines?.length ? headlines.join(SEP) : ""),
+    [headlines]
+  );
 
-  const text = useMemo(() => {
-    if (!headlines?.length) return "";
-    return headlines.join(SEP) + SEP; // garante bolinha no “encaixe” do loop
-  }, [headlines]);
-  const [textW, setTextW] = useState<number>(0);
+  // 2) fita repetida para garantir largura mínima (evita “loop” curto e cortes)
+  const tape = useMemo(() => {
+    if (!raw) return "";
+    const minPx = winW * 1.25; // pelo menos 125% da largura do ecrã
+    const charPx = 7.5 * (scale * 0.95); // heurística ~ 7.5px por char @16px
+    const minChars = Math.ceil(minPx / charPx);
+
+    let s = raw;
+    while (s.length < minChars) s = s + SEP + raw;
+    return s + SEP; // separador final
+  }, [raw]);
+
+  const [textW, setTextW] = useState(0);
   const tx = useRef(new Animated.Value(0)).current;
+  const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  // mede a largura real do texto somando as larguras das linhas renderizadas
-  const handleMeasure = (e: any) => {
+  // mede largura pelo somatório das lines (Android/Hermes-friendly)
+  const onTextLayoutLines = (e: any) => {
     const lines = e?.nativeEvent?.lines ?? [];
     if (!lines.length) return;
-    const total = lines.reduce(
-      (acc: number, l: any) => acc + (l?.width || 0),
-      0
-    );
-    // margem de segurança para não cortar no fim
-    const measured = Math.max(total + 80, winW);
-    setTextW(measured);
+    const sum = lines.reduce((acc: number, l: any) => acc + (l?.width || 0), 0);
+    setTextW((w) => Math.max(w, Math.ceil(sum) + 40)); // margem de segurança
   };
 
+  // fallback por onLayout (iOS costuma ser suficiente)
+  const onLayoutWidth = (e: any) => {
+    const w = e?.nativeEvent?.layout?.width ?? 0;
+    if (w > 0) setTextW((curr) => Math.max(curr, Math.ceil(w) + 40));
+  };
+
+  // fallback por estimativa se nada mediu
   useEffect(() => {
-    if (!textW) return;
+    if (!tape) return;
+    const estimate = Math.ceil(tape.length * 7.5 * (scale * 0.95));
+    const t = setTimeout(() => {
+      setTextW((w) => (w > 0 ? w : Math.max(estimate, winW + 200)));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [tape]);
 
-    const distance = textW + winW; // percorre o texto + entra/saída fora do ecrã
-    const duration = Math.round((distance / speedPxPerSec) * 1000);
+  // ANIMAÇÃO: desloca de 0 até -textW (não -textW - winW) para loop perfeito
+  useEffect(() => {
+    if (!tape || textW <= 0) return;
 
-    const MIN_MS = 20000; // >= 20s
-    const MAX_MS = 120000; // <= 120s
-    const clamped = Math.max(MIN_MS, Math.min(duration, MAX_MS));
+    const distance = textW; // 👈 chave do loop sem cortes
+    const duration = Math.max(
+      10000,
+      Math.min(240000, Math.round((distance / speedPxPerSec) * 1000))
+    );
 
-    const run = () => {
+    const raf = requestAnimationFrame(() => {
       tx.setValue(0);
-      Animated.timing(tx, {
-        toValue: -distance,
-        duration: clamped,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start(() => run());
-    };
+      const run = () => {
+        animRef.current = Animated.timing(tx, {
+          toValue: -distance,
+          duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        });
+        animRef.current.start(({ finished }) => {
+          if (finished) {
+            tx.setValue(0);
+            run();
+          }
+        });
+      };
+      run();
+    });
 
-    run();
-    return () => tx.stopAnimation();
-  }, [textW, text, speedPxPerSec]);
+    return () => {
+      cancelAnimationFrame(raf);
+      animRef.current?.stop?.();
+    };
+  }, [tape, textW, speedPxPerSec, tx]);
 
   return (
-    <View style={styles.wrapper}>
-      {/* Medidor fora da faixa visível: deixa partir em várias linhas, e somamos as larguras */}
+    <View style={styles.wrapper} pointerEvents="none">
+      {/* medidor invisível (precisa estar na árvore para medir em release) */}
       <Text
         style={styles.measure}
-        onTextLayout={handleMeasure}
+        onTextLayout={onTextLayoutLines}
+        onLayout={onLayoutWidth}
         allowFontScaling={false}
       >
-        {text}
+        {tape}
       </Text>
 
       <View style={styles.mask}>
         <Animated.View
           style={[styles.track, { transform: [{ translateX: tx }] }]}
         >
-          {/* cópia 1 */}
+          {/* duas cópias lado a lado; ao transladar -textW a segunda encaixa na primeira */}
           <Text
-            style={[styles.txt, { width: textW }]}
+            style={[styles.txt, { width: Math.max(textW, 1) }]}
             numberOfLines={1}
             ellipsizeMode="clip"
             allowFontScaling={false}
           >
-            {text}
+            {tape}
           </Text>
-          {/* cópia 2 (para loop contínuo) */}
           <Text
-            style={[styles.txt, { width: textW }]}
+            style={[styles.txt, { width: Math.max(textW, 1) }]}
             numberOfLines={1}
             ellipsizeMode="clip"
             allowFontScaling={false}
           >
-            {text}
+            {tape}
           </Text>
         </Animated.View>
       </View>
@@ -99,6 +137,10 @@ export const NewsTicker = ({ headlines, speedPxPerSec = 40 }: Props) => {
 
 const styles = StyleSheet.create({
   wrapper: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     height: 40 * scale,
     backgroundColor: "#004d00",
     justifyContent: "center",
@@ -116,18 +158,16 @@ const styles = StyleSheet.create({
   txt: {
     fontSize: 16 * scale,
     color: "white",
-    flexShrink: 0, // nunca encolhe
-    paddingRight: 50, // espaço entre cópias
+    flexShrink: 0,
+    paddingRight: 40, // espaço entre repetição
     includeFontPadding: false,
     textAlignVertical: "center",
     lineHeight: 18 * scale,
   },
-  // medidor: fora do ecrã e invisível, sem constraints úteis para o cálculo final
   measure: {
     position: "absolute",
-    left: -10000,
-    top: -10000,
     opacity: 0,
     fontSize: 16 * scale,
+    includeFontPadding: false,
   },
 });

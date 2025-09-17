@@ -39,6 +39,7 @@ import { NewsTicker } from "./components/news/NewsTicker";
 import { getLastFetchTime, saveLastFetchTime } from "./utils/asyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { latestSlotBefore, SLOT_KEY } from "./utils/slots";
+import { DEFAULT_HEADLINES } from "./utils/defaultHeadlines";
 import LibFeatScreen from "./screens/LibFeatScreen";
 
 const windowWidth = Dimensions.get("window").width;
@@ -60,6 +61,8 @@ function padding(
     paddingLeft: d !== undefined ? d : b !== undefined ? b : a,
   } as StyleProp<ViewStyle>;
 }
+
+const TICKER_HEIGHT = 32 * scaleFactor; // px
 
 const Tab = createBottomTabNavigator();
 
@@ -129,20 +132,20 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {/*
-        <Stack.Screen
-          name="OrganogramScreen"
-          component={OrganogramScreen}
-          options={{
-            title: "Organograma",
-            headerLeft: () => <BackButton />,
-            headerTitleStyle: {
-              fontSize: 24 * scaleFactor,
-            },
-            headerBackVisible: false,
-          }}
-        />
-        */}
+
+      {/*<Stack.Screen
+        name="OrganogramScreen"
+        component={OrganogramScreen}
+        options={{
+          title: "Organograma",
+          headerLeft: () => <BackButton />,
+          headerTitleStyle: {
+            fontSize: 24 * scaleFactor,
+          },
+          headerBackVisible: false,
+        }}
+      />*/}
+
       <Stack.Screen
         name="ComplaintScreen"
         component={ComplaintScreen}
@@ -203,22 +206,25 @@ function TabScreen() {
   return (
     <Tab.Navigator
       initialRouteName="Menu"
-      sceneContainerStyle={{ flex: 1, paddingTop: insets.top }}
+      sceneContainerStyle={{
+        flex: 1,
+        paddingTop: insets.top,
+        // dá espaço para conteúdo não ficar escondido pela tab bar + ticker
+        paddingBottom: 60 * scaleFactor + TICKER_HEIGHT + insets.bottom,
+      }}
       screenOptions={{
         headerShown: false,
-        tabBarIconStyle: {
-          width: "100%",
-        },
+        tabBarIconStyle: { width: "100%" },
         tabBarStyle: {
           flexDirection: "row",
           height: 60 * scaleFactor,
           backgroundColor: "#7eda3b",
           paddingVertical: 10 * scaleFactor,
+          // move a tab bar para cima, deixando o ticker no fundo
+          position: "absolute",
+          bottom: TICKER_HEIGHT + insets.bottom,
         },
-        tabBarLabelStyle: {
-          fontSize: 10 * scaleFactor,
-          color: "#fff",
-        },
+        tabBarLabelStyle: { fontSize: 10 * scaleFactor, color: "#fff" },
         tabBarLabelPosition: "below-icon",
       }}
     >
@@ -371,62 +377,130 @@ export default function App() {
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const [headlines, setHeadlines] = useState<string[]>([]);
+  const [headlines, setHeadlines] = useState<string[]>(DEFAULT_HEADLINES);
 
   useEffect(() => {
     let mounted = true;
 
-    const readCached = async () => {
+    const KEYS = {
+      data: "latestHeadlines",
+      ts: "latestHeadlinesTS",
+      slot: SLOT_KEY,
+      ver: "latestHeadlinesVER",
+      src: "latestHeadlinesSRC", // "api" | "default"
+    } as const;
+
+    const CACHE_VERSION = "2"; // <- incrementa para invalidar versões antigas
+    const TTL_MS = 30 * 60 * 1000; // 30 min (ajusta se quiseres)
+
+    const readCache = async () => {
       try {
-        const cached = await AsyncStorage.getItem("latestHeadlines");
-        return cached ? (JSON.parse(cached) as string[]) : [];
+        const [ver, dataStr, tsStr, src] = await Promise.all([
+          AsyncStorage.getItem(KEYS.ver),
+          AsyncStorage.getItem(KEYS.data),
+          AsyncStorage.getItem(KEYS.ts),
+          AsyncStorage.getItem(KEYS.src),
+        ]);
+        const arr = dataStr ? (JSON.parse(dataStr) as string[]) : [];
+        const ts = tsStr ? Number(tsStr) : NaN;
+        return {
+          arr: Array.isArray(arr) ? arr : [],
+          ts: Number.isFinite(ts) ? ts : NaN,
+          src: src ?? null,
+          okVersion: ver === CACHE_VERSION,
+        };
       } catch {
-        return [];
+        return {
+          arr: [],
+          ts: NaN,
+          src: null as string | null,
+          okVersion: false,
+        };
       }
     };
 
-    const tryCatchUp = async () => {
-      try {
-        const slotISO = latestSlotBefore(new Date()).toISOString();
-        const lastSlotISO = await AsyncStorage.getItem(SLOT_KEY);
+    const saveApiCache = async (arr: string[]) => {
+      // só grava se for mesmo resultado da API e não default
+      if (!arr.length || arr.join("|") === DEFAULT_HEADLINES.join("|")) return;
+      await Promise.all([
+        AsyncStorage.setItem(KEYS.data, JSON.stringify(arr)),
+        AsyncStorage.setItem(KEYS.ts, String(Date.now())),
+        AsyncStorage.setItem(KEYS.ver, CACHE_VERSION),
+        AsyncStorage.setItem(KEYS.src, "api"),
+      ]);
+    };
 
-        if (lastSlotISO !== slotISO) {
-          const news = await fetchAgricultureNews();
-          if (news.length) {
-            await AsyncStorage.setItem("latestHeadlines", JSON.stringify(news));
-            await AsyncStorage.setItem(SLOT_KEY, slotISO);
-            if (mounted) setHeadlines(news);
-            return;
-          }
+    const clearCache = async () => {
+      await AsyncStorage.multiRemove([
+        KEYS.data,
+        KEYS.ts,
+        KEYS.slot,
+        KEYS.ver,
+        KEYS.src,
+      ]);
+    };
+
+    const ensureFreshHeadlines = async () => {
+      const now = new Date();
+      const slotISO = latestSlotBefore(now).toISOString();
+      const lastSlotISO = await AsyncStorage.getItem(KEYS.slot);
+
+      // 0) ler cache
+      const { arr: cached, ts, src, okVersion } = await readCache();
+
+      // 1) MIGRAÇÃO: se alguma vez defaults foram guardados, limpa já
+      const looksLikeDefault =
+        cached.length > 0 && cached.join("|") === DEFAULT_HEADLINES.join("|");
+      if (looksLikeDefault || !okVersion || src !== "api") {
+        // trata tudo como 'sem cache API' e limpa
+        await clearCache();
+      }
+
+      // 2) reavaliar depois de possível limpeza
+      const after = await readCache();
+      const hasApiCache = after.src === "api" && after.arr.length > 0;
+      const ageMs = Number.isFinite(after.ts)
+        ? Date.now() - (after.ts as number)
+        : Infinity;
+
+      // mostrar algo já: se tens cache API, usa-o, senão defaults
+      if (hasApiCache) {
+        if (mounted) setHeadlines(after.arr);
+      } else {
+        if (mounted) setHeadlines(DEFAULT_HEADLINES);
+      }
+
+      // 3) decidir fetch
+      const slotChanged = lastSlotISO !== slotISO;
+      const stale = ageMs > TTL_MS;
+
+      // fetcha se: não tens cache API OU mudou o slot OU ficou stale
+      if (!hasApiCache || slotChanged || stale || true) {
+        const news = await fetchAgricultureNews();
+        console.log("fetchou");
+
+        if (news.length) {
+          await saveApiCache(news); // grava só se veio da API
+          await AsyncStorage.setItem(KEYS.slot, slotISO); // atualiza slot só com sucesso
+          if (mounted) setHeadlines(news);
+          return;
         }
-        // fallback ao cache
-        const cached = await readCached();
-        if (mounted && cached.length) setHeadlines(cached);
-      } catch (e) {
-        const cached = await readCached();
-        if (mounted && cached.length) setHeadlines(cached);
-        console.warn("tryCatchUp error:", e);
+        // Se falhou, NÃO atualiza TS nem SLOT: assim continua “stale” e volta a tentar no próximo foco/arranque
       }
     };
 
-    // 1) no arranque
-    tryCatchUp();
+    ensureFreshHeadlines();
 
-    // 2) ao voltar ao foreground
     const sub = AppState.addEventListener("change", (s) => {
-      if (s === "active") tryCatchUp();
+      if (s === "active") ensureFreshHeadlines();
     });
-
-    // 3) registo do background fetch
-    registerBackgroundFetch().catch((e) =>
-      console.warn("registerBackgroundFetch failed:", e)
-    );
 
     return () => {
       mounted = false;
       sub.remove();
     };
   }, []);
+
   const upcomingEvents = getUpcomingEvents(eventsData);
 
   useEffect(() => {
@@ -450,28 +524,24 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NotificationScheduler />
-      {/*<View>
-        {modalVisible && selectedEvent && (
-          <Modal
-            visible={modalVisible}
-            transparent={true}
-            onRequestClose={onCloseHandler}
-          >
-            <EventModal
-              event={selectedEvent}
-              onClose={onCloseHandler}
-              onNext={() => setSelectedEventIndex(selectedEventIndex + 1)}
-              onPrevious={() => setSelectedEventIndex(selectedEventIndex - 1)}
-              showNext={showNext}
-              showPrevious={showPrevious}
-            />
-          </Modal>
-        )}
-        </View>*/}
-      <NavigationContainer>
-        <TabScreen />
-      </NavigationContainer>
-      {/*<NewsTicker headlines={headlines} speedPxPerSec={20} />*/}
+      <View style={{ flex: 1 }}>
+        <NavigationContainer>
+          <TabScreen />
+        </NavigationContainer>
+
+        {/* Ticker fixo no fundo */}
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 10,
+          }}
+        >
+          <NewsTicker headlines={headlines} speedPxPerSec={20} />
+        </View>
+      </View>
     </SafeAreaProvider>
   );
 }
