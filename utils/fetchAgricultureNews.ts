@@ -16,7 +16,7 @@ function getKey(): string | undefined {
   return extra.mediaStackApiKey || ENV_KEY || undefined;
 }
 
-const Q = `languages=pt&countries=pt&keywords=agricultura&limit=20&sort=published_desc`;
+const Q = `languages=pt&countries=pt&keywords=agricultura&limit=5&sort=published_desc`;
 
 /** Tenta HTTPS primeiro. Se vier erro típico do plano free (access_restricted)
  *  ou falhar a rede, tenta HTTP como fallback. */

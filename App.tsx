@@ -377,51 +377,43 @@ export default function App() {
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
+  // dentro do teu App.tsx
+  // ...
   const [headlines, setHeadlines] = useState<string[]>(DEFAULT_HEADLINES);
 
   useEffect(() => {
     let mounted = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const KEYS = {
       data: "latestHeadlines",
       ts: "latestHeadlinesTS",
-      slot: SLOT_KEY,
       ver: "latestHeadlinesVER",
-      src: "latestHeadlinesSRC", // "api" | "default"
+      src: "latestHeadlinesSRC", // "api"
+      lastSlot: "latestHeadlinesSLOT", // ISO do último slot processado
     } as const;
 
-    const CACHE_VERSION = "2"; // <- incrementa para invalidar versões antigas
-    const TTL_MS = 30 * 60 * 1000; // 30 min (ajusta se quiseres)
+    const CACHE_VERSION = "6"; // sobe se quiseres invalidar caches antigos
 
+    const SLOT_HOURS = [10, 13]; // 10:00 e 13:00 (hora local do device)
+
+    // util: ler/escrever cache só quando vem da API
     const readCache = async () => {
       try {
-        const [ver, dataStr, tsStr, src] = await Promise.all([
+        const [ver, dataStr, src] = await Promise.all([
           AsyncStorage.getItem(KEYS.ver),
           AsyncStorage.getItem(KEYS.data),
-          AsyncStorage.getItem(KEYS.ts),
           AsyncStorage.getItem(KEYS.src),
         ]);
         const arr = dataStr ? (JSON.parse(dataStr) as string[]) : [];
-        const ts = tsStr ? Number(tsStr) : NaN;
-        return {
-          arr: Array.isArray(arr) ? arr : [],
-          ts: Number.isFinite(ts) ? ts : NaN,
-          src: src ?? null,
-          okVersion: ver === CACHE_VERSION,
-        };
+        const ok = ver === CACHE_VERSION && src === "api" && arr.length > 0;
+        return ok ? arr : [];
       } catch {
-        return {
-          arr: [],
-          ts: NaN,
-          src: null as string | null,
-          okVersion: false,
-        };
+        return [];
       }
     };
-
     const saveApiCache = async (arr: string[]) => {
-      // só grava se for mesmo resultado da API e não default
-      if (!arr.length || arr.join("|") === DEFAULT_HEADLINES.join("|")) return;
+      if (!arr.length) return; // nunca gravar vazio/defaults
       await Promise.all([
         AsyncStorage.setItem(KEYS.data, JSON.stringify(arr)),
         AsyncStorage.setItem(KEYS.ts, String(Date.now())),
@@ -430,76 +422,99 @@ export default function App() {
       ]);
     };
 
-    const clearCache = async () => {
-      await AsyncStorage.multiRemove([
-        KEYS.data,
-        KEYS.ts,
-        KEYS.slot,
-        KEYS.ver,
-        KEYS.src,
-      ]);
+    // slots: última ocorrência (<= agora) e próxima (> agora)
+    const atHour = (base: Date, hour: number) => {
+      const d = new Date(base);
+      d.setHours(hour, 0, 0, 0);
+      return d;
+    };
+    const latestSlotBefore = (now: Date) => {
+      const today10 = atHour(now, SLOT_HOURS[0]);
+      const today13 = atHour(now, SLOT_HOURS[1]);
+      if (now >= today13) return today13;
+      if (now >= today10) return today10;
+      // ontem 13:00
+      const y = new Date(now);
+      y.setDate(y.getDate() - 1);
+      return atHour(y, SLOT_HOURS[1]);
+    };
+    const nextSlotAfter = (now: Date) => {
+      const today10 = atHour(now, SLOT_HOURS[0]);
+      const today13 = atHour(now, SLOT_HOURS[1]);
+      if (now < today10) return today10;
+      if (now < today13) return today13;
+      // amanhã 10:00
+      const t = new Date(now);
+      t.setDate(t.getDate() + 1);
+      return atHour(t, SLOT_HOURS[0]);
     };
 
-    const ensureFreshHeadlines = async () => {
+    // compara arrays de títulos (ordem importa)
+    const sameHeadlines = (a: string[], b: string[]) =>
+      a.length === b.length && a.every((v, i) => v === b[i]);
+
+    const scheduleNext = () => {
       const now = new Date();
-      const slotISO = latestSlotBefore(now).toISOString();
-      const lastSlotISO = await AsyncStorage.getItem(KEYS.slot);
-
-      // 0) ler cache
-      const { arr: cached, ts, src, okVersion } = await readCache();
-
-      // 1) MIGRAÇÃO: se alguma vez defaults foram guardados, limpa já
-      const looksLikeDefault =
-        cached.length > 0 && cached.join("|") === DEFAULT_HEADLINES.join("|");
-      if (looksLikeDefault || !okVersion || src !== "api") {
-        // trata tudo como 'sem cache API' e limpa
-        await clearCache();
-      }
-
-      // 2) reavaliar depois de possível limpeza
-      const after = await readCache();
-      const hasApiCache = after.src === "api" && after.arr.length > 0;
-      const ageMs = Number.isFinite(after.ts)
-        ? Date.now() - (after.ts as number)
-        : Infinity;
-
-      // mostrar algo já: se tens cache API, usa-o, senão defaults
-      if (hasApiCache) {
-        if (mounted) setHeadlines(after.arr);
-      } else {
-        if (mounted) setHeadlines(DEFAULT_HEADLINES);
-      }
-
-      // 3) decidir fetch
-      const slotChanged = lastSlotISO !== slotISO;
-      const stale = ageMs > TTL_MS;
-
-      // fetcha se: não tens cache API OU mudou o slot OU ficou stale
-      if (!hasApiCache || slotChanged || stale || true) {
-        const news = await fetchAgricultureNews();
-        console.log("fetchou");
-
-        if (news.length) {
-          await saveApiCache(news); // grava só se veio da API
-          await AsyncStorage.setItem(KEYS.slot, slotISO); // atualiza slot só com sucesso
-          if (mounted) setHeadlines(news);
-          return;
-        }
-        // Se falhou, NÃO atualiza TS nem SLOT: assim continua “stale” e volta a tentar no próximo foco/arranque
-      }
+      const next = nextSlotAfter(now);
+      const ms = Math.max(500, next.getTime() - now.getTime());
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(runIfNewSlot, ms);
+      // console.log("[news] next slot @", next.toLocaleString(), "in", Math.round(ms/1000), "s");
     };
 
-    ensureFreshHeadlines();
+    const runIfNewSlot = async () => {
+      if (!mounted) return;
+      const now = new Date();
+      const slot = latestSlotBefore(now).toISOString();
+      const lastSlot = await AsyncStorage.getItem(KEYS.lastSlot);
+
+      // já processado este slot? então só agenda o próximo
+      if (lastSlot === slot) {
+        scheduleNext();
+        return;
+      }
+
+      // tenta fetch
+      const fresh = await fetchAgricultureNews();
+
+      if (fresh.length) {
+        const cached = await readCache();
+        if (!sameHeadlines(fresh, cached)) {
+          await saveApiCache(fresh);
+          if (mounted) setHeadlines(fresh);
+        }
+        // marca slot processado (houve resposta da API, com ou sem mudança)
+        await AsyncStorage.setItem(KEYS.lastSlot, slot);
+      } else {
+        // sem dados (falha/erro) → não marca slot; volta a tentar quando app focar
+        // (opcional) podes re-tentar passado uns minutos:
+        // setTimeout(runIfNewSlot, 5 * 60 * 1000);
+      }
+
+      scheduleNext();
+    };
+
+    (async () => {
+      // mostra já algo: cache válido se existir, senão defaults
+      const cached = await readCache();
+      if (cached.length) setHeadlines(cached);
+      else setHeadlines(DEFAULT_HEADLINES);
+
+      // dispara lógica do slot imediatamente (caso já estejamos depois das 10/13 e ainda não processado)
+      runIfNewSlot();
+    })();
 
     const sub = AppState.addEventListener("change", (s) => {
-      if (s === "active") ensureFreshHeadlines();
+      if (s === "active") runIfNewSlot();
     });
 
     return () => {
       mounted = false;
       sub.remove();
+      if (timer) clearTimeout(timer);
     };
   }, []);
+  // ...
 
   const upcomingEvents = getUpcomingEvents(eventsData);
 
