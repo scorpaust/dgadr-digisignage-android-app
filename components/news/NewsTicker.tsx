@@ -68,7 +68,7 @@ export const NewsTicker = ({ headlines, speedPxPerSec = 30 }: Props) => {
     const distance = textW; // 👈 chave do loop sem cortes
     const duration = Math.max(
       10000,
-      Math.min(240000, Math.round((distance / speedPxPerSec) * 1000))
+      Math.min(100000, Math.round((distance / speedPxPerSec) * 1000))
     );
 
     const raf = requestAnimationFrame(() => {

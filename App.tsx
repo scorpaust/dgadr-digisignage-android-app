@@ -554,7 +554,7 @@ export default function App() {
             zIndex: 10,
           }}
         >
-          <NewsTicker headlines={headlines} speedPxPerSec={20} />
+          <NewsTicker headlines={headlines} speedPxPerSec={40} />
         </View>
       </View>
     </SafeAreaProvider>
