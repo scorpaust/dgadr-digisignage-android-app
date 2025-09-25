@@ -50,6 +50,13 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#f5a442",
     onPress: "MediaScreen",
   },
+  {
+    id: "6b",
+    icon: "newspaper-outline",
+    title: "Newsletters",
+    color: "#2E7D32",
+    onPress: "NewslettersScreen",
+  },
   /*{
     id: "7",
     icon: "calendar-outline",

@@ -41,6 +41,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { latestSlotBefore, SLOT_KEY } from "./utils/slots";
 import { DEFAULT_HEADLINES } from "./utils/defaultHeadlines";
 import LibFeatScreen from "./screens/LibFeatScreen";
+import NewslettersScreen from "./screens/NewslettersScreen";
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -86,6 +87,25 @@ function StackScreen() {
           ),
           headerBackVisible: false,
           headerRight: () => <DateTimeComponent />,
+        }}
+      />
+      <Tab.Screen
+        name="NewslettersScreen"
+        component={NewslettersScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="newspaper-outline"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          title: "Newsletters",
+          headerLeft: () => <BackButton />,
+          headerTitleStyle: {
+            fontSize: 24 * scaleFactor,
+          },
         }}
       />
       <Stack.Screen
@@ -269,6 +289,21 @@ function TabScreen() {
           tabBarIcon: () => (
             <Ionicons
               name="barcode"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="NewslettersScreen"
+        component={NewslettersScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="newspaper-outline"
               style={styles.icon}
               size={20 * scaleFactor}
               color="black"
