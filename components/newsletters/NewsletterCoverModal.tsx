@@ -34,9 +34,13 @@ const NewsletterCoverModal: React.FC<Props> = ({
 }) => {
   const [coverAspectRatio, setCoverAspectRatio] = useState<number | null>(null);
   const { width: liveWidth, height: liveHeight } = useWindowDimensions();
+  const [ratio, setRatio] = useState(0.707); // fallback: A4 retrato
+
+  const { width: winW } = Dimensions.get("window");
+  const scale = winW / 320;
 
   const modalContentWidth = useMemo(
-    () => Math.min(liveWidth * 0.92, 1080),
+    () => Math.min(liveWidth * 0.92 * scale, 250 * scale),
     [liveWidth]
   );
   const horizontalInset = useMemo(
@@ -60,10 +64,13 @@ const NewsletterCoverModal: React.FC<Props> = ({
     () => ({ width: modalContentWidth }),
     [modalContentWidth]
   );
-  const fallbackCoverStyle = useMemo(
-    () => ({ minHeight: coverFallbackHeight }),
-    [coverFallbackHeight]
-  );
+  const dynamicCoverStyle = useMemo(() => {
+    if (coverAspectRatio) {
+      return { height: modalContentWidth / coverAspectRatio };
+    }
+
+    return { minHeight: coverFallbackHeight };
+  }, [coverAspectRatio, modalContentWidth, coverFallbackHeight]);
 
   useEffect(() => {
     if (!visible || !coverUri) {
@@ -102,21 +109,16 @@ const NewsletterCoverModal: React.FC<Props> = ({
             <View style={[styles.coverFrame, frameWidthStyle]}>
               <Image
                 source={{ uri: coverUri }}
-                style={[
-                  styles.cover,
-                  coverAspectRatio
-                    ? { aspectRatio: coverAspectRatio }
-                    : styles.coverFallback,
-                  !coverAspectRatio ? fallbackCoverStyle : null,
-                ]}
-                contentFit="contain"
+                style={[styles.cover, { aspectRatio: ratio }]} // SEM height!
+                contentFit="contain" // ou "cover" se quiseres cheio, mesmo cortando margens
                 transition={200}
                 cachePolicy="memory-disk"
                 priority="high"
-                allowDownscaling={false}
+                allowDownscaling
+                recyclingKey={coverUri}
                 onLoad={({ source }) => {
                   if (source?.width && source?.height) {
-                    setCoverAspectRatio(source.width / source.height);
+                    setRatio(source.width / source.height);
                   }
                 }}
               />
@@ -131,7 +133,7 @@ const NewsletterCoverModal: React.FC<Props> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(16, 42, 67, 0.82)",
+    backgroundColor: "rgba(16, 42, 67, 0.8)",
   },
   container: {
     flex: 1,
@@ -169,11 +171,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   meta: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    padding: "2%",
     width: "100%",
     marginBottom: 28 * scaleFactor,
   },
   category: {
-    fontSize: 13 * scaleFactor,
+    fontSize: 17 * scaleFactor,
     fontWeight: "600",
     color: "#486581",
     textTransform: "uppercase",
@@ -186,7 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 6 * scaleFactor,
   },
   date: {
-    fontSize: 13 * scaleFactor,
+    fontSize: 16 * scaleFactor,
     color: "#829ab1",
   },
   coverFrame: {
