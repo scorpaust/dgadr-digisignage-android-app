@@ -14,11 +14,43 @@ const SEP = "   •   ";
 
 type Props = { headlines: string[]; speedPxPerSec?: number };
 
-export const NewsTicker = ({ headlines, speedPxPerSec = 30 }: Props) => {
-  // 1) conteúdo base
+// helpers de filtro (acima do componente ou dentro do ficheiro)
+const strip = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+// palavras/frases a bloquear (com e sem acentos)
+const BLOCK_KEYWORDS = [
+  "ministro",
+  "ministra",
+  "maricá", // também apanha "Maricá"
+  "secretário de estado",
+  "Montenegro", // também apanha "Secretário de Estado"
+].map(strip);
+
+// se quiseres ser mais agressivo com variantes sem acentos:
+BLOCK_KEYWORDS.push("marica", "secretario de estado");
+
+const shouldBlock = (title: string) => {
+  const t = strip(title);
+  return BLOCK_KEYWORDS.some((kw) => t.includes(kw));
+};
+
+export const NewsTicker = ({ headlines, speedPxPerSec = 180 }: Props) => {
+  const filtered = useMemo(() => {
+    if (!Array.isArray(headlines)) return [];
+    const seen = new Set<string>();
+    return headlines
+      .filter((h) => !shouldBlock(h))
+      .filter((h) => (seen.has(h) ? false : (seen.add(h), true)));
+  }, [headlines]);
+
+  // 1) conteúdo base (usa filtradas)
   const raw = useMemo(
-    () => (headlines?.length ? headlines.join(SEP) : ""),
-    [headlines]
+    () => (filtered.length ? filtered.join(SEP) : ""),
+    [filtered]
   );
 
   // 2) fita repetida para garantir largura mínima (evita “loop” curto e cortes)

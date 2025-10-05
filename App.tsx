@@ -26,7 +26,7 @@ import UsefulLinksScreen from "./screens/UsefulLinksScreen";
 import OrganogramScreen from "./screens/OrganogramScreen";
 import EventsScreen from "./screens/EventsScreen";
 import NotificationScheduler from "./components/notifications/NotificationScheduler";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   EventModal,
   eventsData,
@@ -40,8 +40,16 @@ import { getLastFetchTime, saveLastFetchTime } from "./utils/asyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { latestSlotBefore, SLOT_KEY } from "./utils/slots";
 import { DEFAULT_HEADLINES } from "./utils/defaultHeadlines";
+import { db } from "./config";
+import { onValue, ref } from "firebase/database";
 import LibFeatScreen from "./screens/LibFeatScreen";
 import NewslettersScreen from "./screens/NewslettersScreen";
+
+type FirebaseHeadlineRecord = {
+  title?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+};
 
 const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
@@ -414,7 +422,94 @@ export default function App() {
 
   // dentro do teu App.tsx
   // ...
-  const [headlines, setHeadlines] = useState<string[]>(DEFAULT_HEADLINES);
+  const [firebaseHeadlines, setFirebaseHeadlines] = useState<string[]>([]);
+  const [apiHeadlines, setApiHeadlines] = useState<string[]>([]);
+  const tickerHeadlines = useMemo(() => {
+    const primary = firebaseHeadlines.filter(Boolean);
+    const secondary = apiHeadlines.filter(Boolean);
+    const defaults = new Set(DEFAULT_HEADLINES);
+    const sanitizedPrimary = primary.filter((title) => !defaults.has(title));
+    const sanitizedSecondary = secondary.filter(
+      (title) => !defaults.has(title)
+    );
+    return [...sanitizedPrimary, ...sanitizedSecondary, ...DEFAULT_HEADLINES];
+  }, [firebaseHeadlines, apiHeadlines]);
+
+  useEffect(() => {
+    const parseTimestamp = (input: unknown): number => {
+      if (typeof input === "number" && Number.isFinite(input)) {
+        return input;
+      }
+      if (typeof input === "string") {
+        const trimmed = input.trim();
+        if (!trimmed) return 0;
+        const numeric = Number(trimmed);
+        if (!Number.isNaN(numeric)) {
+          return numeric;
+        }
+        const parsed = Date.parse(trimmed);
+        if (!Number.isNaN(parsed)) {
+          return parsed;
+        }
+      }
+      return 0;
+    };
+
+    const newsRef = ref(db, "/news");
+    const unsubscribe = onValue(
+      newsRef,
+      (snapshot) => {
+        const raw = snapshot.val() as Record<
+          string,
+          FirebaseHeadlineRecord
+        > | null;
+        if (!raw) {
+          setFirebaseHeadlines([]);
+          return;
+        }
+
+        const items = Object.values(raw)
+          .map((value: FirebaseHeadlineRecord) => {
+            const title =
+              typeof value?.title === "string" ? value.title.trim() : "";
+            if (!title) return null;
+
+            const createdAt = parseTimestamp(value?.createdAt);
+            const updatedAt = parseTimestamp(value?.updatedAt);
+            const primary = updatedAt || createdAt || 0;
+
+            return {
+              title,
+              primary,
+              secondary: createdAt || 0,
+            };
+          })
+          .filter(Boolean) as {
+          title: string;
+          primary: number;
+          secondary: number;
+        }[];
+
+        items.sort((a, b) => {
+          if (b.primary === a.primary) {
+            return b.secondary - a.secondary;
+          }
+          return b.primary - a.primary;
+        });
+
+        console.log(items.map((item) => item.title));
+
+        setFirebaseHeadlines(items.map((item) => item.title));
+      },
+      (error) => {
+        console.warn("[news] Firebase headlines listener erro:", error);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -516,7 +611,7 @@ export default function App() {
         const cached = await readCache();
         if (!sameHeadlines(fresh, cached)) {
           await saveApiCache(fresh);
-          if (mounted) setHeadlines(fresh);
+          if (mounted) setApiHeadlines(fresh);
         }
         // marca slot processado (houve resposta da API, com ou sem mudança)
         await AsyncStorage.setItem(KEYS.lastSlot, slot);
@@ -532,8 +627,8 @@ export default function App() {
     (async () => {
       // mostra já algo: cache válido se existir, senão defaults
       const cached = await readCache();
-      if (cached.length) setHeadlines(cached);
-      else setHeadlines(DEFAULT_HEADLINES);
+      if (cached.length) setApiHeadlines(cached);
+      else setApiHeadlines([]);
 
       // dispara lógica do slot imediatamente (caso já estejamos depois das 10/13 e ainda não processado)
       runIfNewSlot();
@@ -589,7 +684,7 @@ export default function App() {
             zIndex: 10,
           }}
         >
-          <NewsTicker headlines={headlines} speedPxPerSec={40} />
+          <NewsTicker headlines={tickerHeadlines} speedPxPerSec={40} />
         </View>
       </View>
     </SafeAreaProvider>
