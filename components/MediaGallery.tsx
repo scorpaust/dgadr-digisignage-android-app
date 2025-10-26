@@ -93,13 +93,15 @@ const MediaGallery: React.FC<{ mediaItems: MediaItem[] }> = ({
   return (
     <Carousel
       data={mediaItems}
-      renderItem={({ item }) => <RenderItem item={item} />}
+      renderItem={({ item, index }: any) => (
+        <RenderItem item={item as MediaItem} />
+      )}
       sliderWidth={windowWidth}
       itemWidth={windowWidth * 0.9}
+      vertical={false}
       autoplay={true}
       autoplayInterval={10000}
       loop={true}
-      horizontal
     />
   );
 };
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    height: windowHeight * 0.8,
+    height: windowHeight * 0.7,
   },
   media: {
     width: "90%",
