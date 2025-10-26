@@ -1,344 +1,222 @@
-import React, { useState, useRef, SetStateAction } from "react";
-import useEffect from "react";
-import {
-  ScrollView,
-  Alert,
-  Animated,
-  StyleSheet,
-  Dimensions,
-  View,
-  GestureResponderEvent,
-} from "react-native";
-import Svg, {
-  Rect,
-  Image,
-  Text,
-  G,
-  ClipPath,
-  Defs,
-  Path,
-  Line,
-} from "react-native-svg";
-import {
-  GestureHandlerRootView,
-  PanGestureHandler,
-  PinchGestureHandler,
-} from "react-native-gesture-handler";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Dimensions, View } from "react-native";
+import { ORG_CHART_DATA } from "../../data/org-data";
+import { TreeNode, OrgModalData } from "../../types/org";
+import OrgNode from "./OrgNode";
+import OrgNodeModal from "./OrgNodeModal";
 
-interface TreeNode {
-  name: string;
-  title: string;
-  imageUrl: string;
-  children?: TreeNode[];
-}
-
-const windowWidth = Dimensions.get("window").width;
-
-const scaleFactor = windowWidth / 400;
-
-// Constants
-const horizontalSpacing = 200 * scaleFactor;
-const verticalSpacing = 150 * scaleFactor;
-const nodeWidth = 190 * scaleFactor;
-const nodeHeight = 100 * scaleFactor;
-const fontSize = 12 * scaleFactor;
-
-// Get device window dimensions
-const window = Dimensions.get("window");
-
-// Helper function to calculate tree size
-const getTreeSize = (
-  node: TreeNode,
-  depth = 0
-): { maxDepth: number; maxWidth: number } => {
-  if (!node.children || node.children.length === 0) {
-    return { maxDepth: depth, maxWidth: 1 };
-  }
-
-  const childDepths = node.children.map((child) =>
-    getTreeSize(child, depth + 1)
-  );
-  const totalWidth = childDepths.reduce((sum, val) => sum + val.maxWidth, 0);
-  const maxDepth = Math.max(...childDepths.map((val) => val.maxDepth));
-
-  return { maxDepth, maxWidth: totalWidth };
-};
-
-// Function to render each node
-const renderNode = (
-  node: TreeNode,
-  x: number,
-  y: number,
-  depth: number = 0
-) => {
-  const hasChildren = node.children && node.children?.length > 0;
-
-  return (
-    <G key={`${node.name}-${depth}`}>
-      <Rect
-        x={x - nodeWidth / 2}
-        y={y - nodeHeight / 2}
-        width={nodeWidth}
-        height={nodeHeight}
-        fill="lightblue"
-        onPress={() => Alert.alert("Informação", `Clicou em ${node.title}!`)}
-      />
-      {/*<Image
-        href={{ uri: node.imageUrl }}
-        x={x - nodeWidth / 4}
-        y={y - nodeHeight / 3}
-        width={80}
-        height={20}
-      />*/}
-      <Text
-        x={x}
-        y={node.name !== "" ? y - 10 * scaleFactor : y + 2 * scaleFactor}
-        textAnchor="middle"
-        fontWeight="bold"
-        fontSize={fontSize}
-        fill="black"
-      >
-        {node.title}
-      </Text>
-      <Text
-        x={x}
-        y={y + 5 * scaleFactor}
-        textAnchor="middle"
-        fontWeight="bold"
-        fontSize={fontSize}
-        fill="black"
-      >
-        {node.name}
-      </Text>
-      {hasChildren &&
-        node.children?.map((child, index) => {
-          const childX =
-            x -
-            (horizontalSpacing / 2) *
-              (node.children ? node.children.length : 0 - 1) +
-            index * horizontalSpacing;
-          const childY = y + verticalSpacing;
-          return (
-            <React.Fragment key={`${child.name}-${depth + 1}`}>
-              <Line
-                x1={x}
-                y1={y + nodeHeight / 2}
-                x2={childX}
-                y2={childY - nodeHeight / 2}
-                stroke="black"
-              />
-              {renderNode(child, childX, childY, depth + 1)}
-            </React.Fragment>
-          );
-        })}
-    </G>
-  );
-};
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const scaleFactor = screenWidth / 320;
 
 const OrgChart: React.FC = () => {
-  const [activeNodes, setActiveNodes] = useState<number[]>([0, 0, 0, 0]);
+  const [selectedNode, setSelectedNode] = useState<OrgModalData | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const data: TreeNode = {
-    name: "Rogério Ferreira",
-    title: "DIRETOR-GERAL",
-    imageUrl: "",
-    children: [
-      {
-        name: "Catarina Cunha",
-        title: "SUBDIRETORA-GERAL",
-        imageUrl: "",
-      },
-      {
-        name: "do Regadio",
-        title: "Conselho Nacional",
-        imageUrl: "",
-      },
-      {
-        name: "da Reserva Agrícola",
-        title: "Entidade Nacional ",
-        imageUrl: "",
-      },
-      {
-        name: "do Exercício da At. Pecuária",
-        title: "Comissão de Acompanhamento",
-        imageUrl: "",
-      },
-      {
-        name: "",
-        title: "Direções de Serviço",
-        imageUrl: "",
-        children: [
-          {
-            name: "Paulo Freitas",
-            title: "DSIGA",
-            imageUrl: "",
-            children:
-              activeNodes == [1, 0, 0, 0]
-                ? [
-                    {
-                      name: "Catarina Ribeiro",
-                      title: "DORH",
-                      imageUrl: "",
-                    },
-                    {
-                      name: "Diogo Ferreira",
-                      title: "DGF",
-                      imageUrl: "",
-                    },
-                    {
-                      name: "Rosália Martins",
-                      title: "DPGI",
-                      imageUrl: "",
-                    },
-                  ]
-                : undefined,
-          },
-          {
-            name: "Sandra Candeias",
-            title: "DSPAA",
-            imageUrl: "",
-          },
-          {
-            name: "Maria S. Luís Centeno",
-            title: "DSTAR",
-            imageUrl: "",
-          },
-          {
-            name: "Cláudia Brandão",
-            title: "DSR",
-            imageUrl: "",
-          },
-        ],
-      },
-    ],
+  const handleNodePress = (node: TreeNode) => {
+    const modalData: OrgModalData = {
+      id: node.id,
+      name: node.name,
+      title: node.title,
+      department: node.department,
+      floor: node.floor,
+      room: node.room,
+      phone: node.phone,
+      email: node.email,
+      position: node.position,
+      shortTitle: node.shortTitle,
+    };
+
+    setSelectedNode(modalData);
+    setModalVisible(true);
   };
 
-  const treeSize = getTreeSize(data);
-  const svgWidth =
-    Math.max(treeSize.maxWidth * horizontalSpacing, 400) + nodeWidth;
-  const svgHeight = (treeSize.maxDepth + 1) * verticalSpacing;
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedNode(null);
+  };
 
-  // Gesture handling state
-  const scale = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
+  const renderDirectorLevel = () => {
+    return (
+      <View style={styles.directorLevel}>
+        <OrgNode
+          node={ORG_CHART_DATA}
+          onPress={handleNodePress}
+          style={styles.directorNode}
+        />
+      </View>
+    );
+  };
+
+  const renderSubdirectorAndCouncils = () => {
+    const subdirector = ORG_CHART_DATA.children?.find(
+      (child) => child.position === "subdirector"
+    );
+    const councils =
+      ORG_CHART_DATA.children?.filter(
+        (child) => child.position === "council"
+      ) || [];
+
+    return (
+      <View style={styles.secondLevel}>
+        {/* Subdirector */}
+        {subdirector && (
+          <View style={styles.subdirectorContainer}>
+            <OrgNode node={subdirector} onPress={handleNodePress} />
+          </View>
+        )}
+
+        {/* Councils */}
+        <View style={styles.councilsContainer}>
+          {councils.map((council) => (
+            <OrgNode
+              key={council.id}
+              node={council}
+              onPress={handleNodePress}
+              style={styles.councilNode}
+            />
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderServiceDirections = () => {
+    const serviceDirections =
+      ORG_CHART_DATA.children?.filter((child) => child.position === "head") ||
+      [];
+
+    return (
+      <View style={styles.serviceLevel}>
+        <View style={styles.serviceDirectionsContainer}>
+          {serviceDirections.map((direction) => (
+            <View key={direction.id} style={styles.directionContainer}>
+              {/* Service Direction */}
+              <OrgNode
+                node={direction}
+                onPress={handleNodePress}
+                style={styles.serviceDirectionNode}
+              />
+
+              {/* Divisions */}
+              {direction.children && direction.children.length > 0 && (
+                <View style={styles.divisionsContainer}>
+                  {direction.children.map((division) => (
+                    <OrgNode
+                      key={division.id}
+                      node={division}
+                      onPress={handleNodePress}
+                      style={styles.divisionNode}
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
 
   return (
-    <ScrollView
-      horizontal={true}
-      scrollEnabled={true}
-      showsHorizontalScrollIndicator={true}
-      contentContainerStyle={{
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "transparent",
-      }}
-    >
+    <View style={styles.container}>
       <ScrollView
-        horizontal={false}
-        scrollEnabled={true}
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={{
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "transparent",
-        }}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
       >
-        <GestureHandlerRootView
-          style={[
-            styles.gestureHandlerRoot,
-            { width: "100%", height: svgHeight },
-          ]}
-        >
-          <PanGestureHandler
-            onGestureEvent={Animated.event(
-              [
-                {
-                  nativeEvent: {
-                    translationX: translateX,
-                    translationY: translateY,
-                  },
-                },
-              ],
-              { useNativeDriver: true }
-            )}
-          >
-            <Animated.View
-              style={{ transform: [{ translateX }, { translateY }] }}
-            >
-              <PinchGestureHandler
-                onGestureEvent={Animated.event(
-                  [{ nativeEvent: { scale: scale } }],
-                  { useNativeDriver: true }
-                )}
-              >
-                <Animated.View
-                  style={{
-                    transform: [{ scale }],
-                    width: svgWidth,
-                    height: svgHeight,
-                  }}
-                >
-                  <Svg height={svgHeight} width={svgWidth}>
-                    <Defs>
-                      <ClipPath id="clip">
-                        <Path d="M0 0 H20 V20 H0 Z" />
-                      </ClipPath>
-                    </Defs>
-                    {renderNode(data, svgWidth / 2, 100)}
-                  </Svg>
-                </Animated.View>
-              </PinchGestureHandler>
-            </Animated.View>
-          </PanGestureHandler>
-        </GestureHandlerRootView>
+        {/* Director Level */}
+        {renderDirectorLevel()}
+
+        {/* Connection Line */}
+        <View style={styles.connectionLine} />
+
+        {/* Subdirector and Councils Level */}
+        {renderSubdirectorAndCouncils()}
+
+        {/* Connection Line */}
+        <View style={styles.connectionLine} />
+
+        {/* Service Directions and Divisions */}
+        {renderServiceDirections()}
       </ScrollView>
-    </ScrollView>
+
+      {/* Modal */}
+      <OrgNodeModal
+        visible={modalVisible}
+        data={selectedNode}
+        onClose={handleCloseModal}
+      />
+    </View>
   );
 };
 
-export default OrgChart;
-
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F7FAFC",
+  },
   scrollView: {
     flex: 1,
-    backgroundColor: "transparent", // Use transparent background to avoid overlay issues
   },
-  gestureHandlerRoot: {
-    width: window.width, // Use full width of the screen
-    height: window.height, // Use full height of the screen, adjust based on your app's navigation/headers/etc.
-    alignItems: "center", // Center children horizontally
-    justifyContent: "center", // Center children vertically
-    backgroundColor: "transparent", // Ensure background is transparent for full manipulation space
-  },
-  // Styles for the nodes to make them visually appealing
-  node: {
-    justifyContent: "center",
+  scrollContent: {
+    padding: 20 * scaleFactor,
     alignItems: "center",
-    backgroundColor: "transparent", // Ensure node background doesn't block gesture handling
   },
-  // Style for SVG Rects to give them a more appealing look
-  rect: {
-    backgroundColor: "#78909C", // Cool grey color for the rectangles
-    borderWidth: 2, // Border thickness
-    borderColor: "#546E7A", // Darker border color for contrast
+  directorLevel: {
+    alignItems: "center",
+    marginBottom: 20 * scaleFactor,
   },
-  // Style for SVG Text to make it visually appealing
-  text: {
-    backgroundColor: "white", // White text color for contrast against the rect color
-    fontWeight: "bold",
-    fontSize: 12 * scaleFactor, // Slightly larger font size for readability
+  directorNode: {
+    marginBottom: 10 * scaleFactor,
   },
-  // Style for SVG Lines to make them visually appealing
-  line: {
-    borderColor: "#37474F", // Dark line color for contrast and visibility
-    borderWidth: 2, // Make lines a bit thicker for visibility
+  connectionLine: {
+    width: 2,
+    height: 20 * scaleFactor,
+    backgroundColor: "#CBD5E0",
+    marginVertical: 10 * scaleFactor,
   },
-  // Adjustments for image styling within SVG
-  image: {
-    width: 20, // Adjust image size as needed
-    height: 20, // Adjust image size as needed
-    x: -10, // Center the image relative to its container
-    y: -10, // Center the image relative to its container
+  secondLevel: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 20 * scaleFactor,
+  },
+  subdirectorContainer: {
+    marginBottom: 20 * scaleFactor,
+  },
+  councilsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    maxWidth: screenWidth - 40 * scaleFactor,
+  },
+  councilNode: {
+    margin: 4 * scaleFactor,
+  },
+  serviceLevel: {
+    width: "100%",
+    alignItems: "center",
+  },
+  serviceDirectionsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    maxWidth: screenWidth - 20 * scaleFactor,
+  },
+  directionContainer: {
+    alignItems: "center",
+    margin: 8 * scaleFactor,
+    marginBottom: 20 * scaleFactor,
+  },
+  serviceDirectionNode: {
+    marginBottom: 15 * scaleFactor,
+  },
+  divisionsContainer: {
+    alignItems: "center",
+  },
+  divisionNode: {
+    marginBottom: 8 * scaleFactor,
   },
 });
+
+export default OrgChart;

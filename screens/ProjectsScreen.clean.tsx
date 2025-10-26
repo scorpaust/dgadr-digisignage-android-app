@@ -1,36 +1,14 @@
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Text,
-  Alert,
-  Dimensions,
-} from "react-native";
+import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import { useStorageImages } from "../utils/useStorageImages";
 import ImageCarousel from "../components/ImageCarousel";
 
-const { width: windowWidth } = Dimensions.get("window");
-const scaleFactor = Math.min(windowWidth / 320, 2.5);
-
 const ProjectsScreen: React.FC = () => {
-  const { imageUrls, loading, error, images } = useStorageImages("projetos", {
+  const { imageUrls, loading, error } = useStorageImages("projetos", {
     shuffle: false, // Keep original order for projects
-    autoRefresh: false, // Disable auto-refresh for debugging
+    autoRefresh: true, // Auto-refresh every 5 minutes
     refreshInterval: 300000,
   });
-
-  // Debug logging
-  React.useEffect(() => {
-    console.log("ProjectsScreen Debug:", {
-      loading,
-      error,
-      imageUrlsCount: imageUrls.length,
-      imagesCount: images.length,
-      firstImageUrl: imageUrls[0],
-      firstImage: images[0],
-    });
-  }, [loading, error, imageUrls, images]);
 
   if (loading) {
     return (
@@ -46,9 +24,6 @@ const ProjectsScreen: React.FC = () => {
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.errorText}>Erro ao carregar projetos</Text>
         <Text style={styles.errorSubtext}>{error}</Text>
-        <Text style={styles.debugText}>
-          Debug: Verifique a consola para mais detalhes
-        </Text>
       </View>
     );
   }
@@ -57,8 +32,8 @@ const ProjectsScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.emptyText}>Nenhum projeto encontrado</Text>
-        <Text style={styles.debugText}>
-          Debug: A pasta 'projetos' pode não existir no Firebase Storage
+        <Text style={styles.helpText}>
+          Adicione imagens à pasta 'projetos' no Firebase Storage
         </Text>
       </View>
     );
@@ -66,9 +41,6 @@ const ProjectsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.debugText}>
-        Debug: {imageUrls.length} imagens carregadas
-      </Text>
       <ImageCarousel
         imageLinks={imageUrls}
         autoplay={true}
@@ -90,33 +62,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 16 * scaleFactor,
-    fontSize: Math.max(16 * scaleFactor, 18),
+    marginTop: 16,
+    fontSize: 16,
     color: "#52606d",
   },
   errorText: {
-    fontSize: Math.max(18 * scaleFactor, 20),
+    fontSize: 18,
     fontWeight: "600",
     color: "#e53e3e",
     textAlign: "center",
-    marginBottom: 8 * scaleFactor,
+    marginBottom: 8,
   },
   errorSubtext: {
-    fontSize: Math.max(14 * scaleFactor, 16),
+    fontSize: 14,
     color: "#52606d",
     textAlign: "center",
   },
   emptyText: {
-    fontSize: Math.max(16 * scaleFactor, 18),
+    fontSize: 16,
     color: "#52606d",
     textAlign: "center",
+    marginBottom: 8,
   },
-  debugText: {
-    fontSize: Math.max(12 * scaleFactor, 14),
+  helpText: {
+    fontSize: 12,
     color: "#999",
     textAlign: "center",
-    marginTop: 8 * scaleFactor,
-    paddingHorizontal: 20 * scaleFactor,
+    fontStyle: "italic",
+    paddingHorizontal: 20,
   },
 });
 

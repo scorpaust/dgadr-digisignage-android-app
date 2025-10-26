@@ -9,7 +9,7 @@ const windowWidth = Dimensions.get("window").width;
 const scaleFactor = windowWidth / 320;
 
 interface ImageCarouselProps {
-  imageLinks: string[];
+  imageLinks: string[]; // Now expects URLs from Firebase Storage
   autoplay?: boolean;
   autoplayInterval?: number | undefined;
 }
@@ -24,11 +24,11 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   autoplay,
   autoplayInterval,
 }) => {
-  const renderItem = ({ item }: { item: any }, index: number) => {
+  const renderItem = ({ item }: { item: string }, index: number) => {
     return (
       <View style={styles.item} key={index}>
         <Image
-          source={item} // Changed here
+          source={{ uri: item }} // Now uses URI for Firebase Storage URLs
           style={styles.image}
         />
       </View>

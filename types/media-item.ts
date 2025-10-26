@@ -1,5 +1,7 @@
 export type MediaItem = {
-    id: string;
-    uri: any;
-    type: string | undefined;
-}
+  id: string;
+  uri: string;
+  type: "photo" | "video" | string;
+  name?: string;
+  fullPath?: string;
+};

@@ -1,22 +1,30 @@
-import React, { SetStateAction, useCallback, useEffect, useState } from "react";
-import { View, Alert } from "react-native"; // Import Alert for displaying error messages
-import NetInfo from "@react-native-community/netinfo"; // Import NetInfo for checking network connectivity
+import React from "react";
+import {
+  View,
+  Alert,
+  ActivityIndicator,
+  Text,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 import MediaGallery from "../components/MediaGallery";
-import { MediaItem } from "../types/media-item";
-import { firebase } from "../config";
-import { getDownloadURL, getStorage, listAll, ref } from "firebase/storage";
+import { useStorageImages } from "../utils/useStorageImages";
 import InfoModal from "../components/InfoModal";
-import { FirebaseError } from "firebase/app";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useEffect, useState } from "react";
+
+const { width: windowWidth } = Dimensions.get("window");
+const scaleFactor = Math.min(windowWidth / 320, 2.5);
 
 const MediaScreen = () => {
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [error, setError] =
-    useState<SetStateAction<FirebaseError | undefined>>(undefined);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isConnected, setIsConnected] =
-    useState<SetStateAction<boolean | null>>(true); // State to track network connectivity
+  const [isConnected, setIsConnected] = useState<boolean | null>(true);
+  const { images, loading, error } = useStorageImages("photos", {
+    shuffle: true, // Shuffle gallery photos
+    autoRefresh: true,
+    refreshInterval: 300000, // 5 minutes
+  });
 
   type RootStackParamList = {
     MenuScreen: { id: number } | undefined;
@@ -25,93 +33,94 @@ const MediaScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const handleCloseModal = () => {
-    setError(undefined);
-    setModalVisible(false);
+    // Error handling is now managed by the hook
   };
 
-  const checkNetworkConnectivity = useCallback(async () => {
-    try {
-      const state = await NetInfo.fetch(); // Check network connectivity
-      setIsConnected(state.isConnected);
-    } catch (error) {
-      console.error("Erro na conexão à Internet:", error);
-    }
-  }, []);
-
-  const getMediaData = useCallback(async () => {
-    try {
-      const storage = getStorage(
-        firebase,
-        "gs://dgadr-digisignage-app.appspot.com"
-      );
-      const listRef = ref(storage, "photos");
-
-      const res = await listAll(listRef);
-      const urlPromises = res.items.map(async (itemRef, index) => {
-        const url = await getDownloadURL(ref(storage, itemRef.fullPath));
-        return {
-          id: index.toString(),
-          uri: url,
-          type: "photo",
-        };
-      });
-
-      const medias = await Promise.all(urlPromises);
-
-      setMediaItems(shuffleMediaArray(medias));
-    } catch (error) {
-      setError(error as FirebaseError);
-      setModalVisible(true);
-    }
-  }, []);
-
   useEffect(() => {
-    checkNetworkConnectivity(); // Check network connectivity when component mounts
-  }, [isConnected]);
-
-  useEffect(() => {
-    if (isConnected) {
-      if (mediaItems.length === 0) {
-        getMediaData();
+    const checkNetworkConnectivity = async () => {
+      try {
+        const state = await NetInfo.fetch();
+        setIsConnected(state.isConnected);
+      } catch (error) {
+        console.error("Erro na conexão à Internet:", error);
+        setIsConnected(false);
       }
-    } else {
-      // Display error message if not connected to the internet
+    };
+
+    checkNetworkConnectivity();
+  }, []);
+
+  useEffect(() => {
+    if (!isConnected) {
       Alert.alert(
         "Sem conexão à Internet",
         "Por favor, verifique a ligação à rede e tente de novo.",
-        undefined,
-        {
-          onDismiss: () => navigation.navigate("MenuScreen"),
-        }
+        [{ text: "OK", onPress: () => navigation.navigate("MenuScreen") }]
       );
     }
-  }, [isConnected, mediaItems]);
+  }, [isConnected, navigation]);
 
-  function shuffleMediaArray(array: MediaItem[]) {
-    let currentIndex = array.length,
-      randomIndex;
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#3F51B5" />
+        <Text style={styles.loadingText}>A carregar galeria de fotos...</Text>
+      </View>
+    );
+  }
 
-    while (currentIndex !== 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex],
-        array[currentIndex],
-      ];
-    }
+  if (error) {
+    return (
+      <>
+        <InfoModal
+          info={{ message: error } as any}
+          onClose={handleCloseModal}
+        />
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>Erro ao carregar galeria</Text>
+        </View>
+      </>
+    );
+  }
 
-    return array;
+  if (images.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.emptyText}>Nenhuma foto encontrada</Text>
+      </View>
+    );
   }
 
   return (
-    <>
-      {error && <InfoModal info={error} onClose={handleCloseModal} />}
-      <View style={{ marginVertical: "10%" }}>
-        {mediaItems.length > 0 && <MediaGallery mediaItems={mediaItems} />}
-      </View>
-    </>
+    <View style={{ marginVertical: "10%" }}>
+      <MediaGallery mediaItems={images} />
+    </View>
   );
 };
 
 export default MediaScreen;
-
+const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20 * scaleFactor,
+  },
+  loadingText: {
+    marginTop: 16 * scaleFactor,
+    fontSize: Math.max(16 * scaleFactor, 18),
+    color: "#52606d",
+    textAlign: "center",
+  },
+  errorText: {
+    fontSize: Math.max(18 * scaleFactor, 20),
+    fontWeight: "600",
+    color: "#e53e3e",
+    textAlign: "center",
+  },
+  emptyText: {
+    fontSize: Math.max(16 * scaleFactor, 18),
+    color: "#52606d",
+    textAlign: "center",
+  },
+});

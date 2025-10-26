@@ -161,7 +161,7 @@ function StackScreen() {
         }}
       />
 
-      {/*<Stack.Screen
+      <Stack.Screen
         name="OrganogramScreen"
         component={OrganogramScreen}
         options={{
@@ -172,7 +172,7 @@ function StackScreen() {
           },
           headerBackVisible: false,
         }}
-      />*/}
+      />
 
       <Stack.Screen
         name="ComplaintScreen"
@@ -260,7 +260,7 @@ function TabScreen() {
           tabBarIcon: () => <Ionicons name="business-outline" style={styles.icon} size={20 * scaleFactor} color="black" />,
           tabBarLabel: "DGADR",          
         }} />*/}
-      {/*<Tab.Screen
+      <Tab.Screen
         name="Organograma"
         component={OrganogramScreen}
         options={{
@@ -274,7 +274,7 @@ function TabScreen() {
           ),
           tabBarLabel: "",
         }}
-      />*/}
+      />
       <Tab.Screen
         name="MediaScreen"
         component={MediaScreen}
@@ -365,13 +365,14 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
+
       <Tab.Screen
-        name="Menu"
-        component={StackScreen}
+        name="UsefulLinksScreen"
+        component={UsefulLinksScreen}
         options={{
           tabBarIcon: () => (
             <Ionicons
-              name="menu-sharp"
+              name="link"
               style={styles.icon}
               size={20 * scaleFactor}
               color="black"
@@ -381,12 +382,12 @@ function TabScreen() {
         }}
       />
       <Tab.Screen
-        name="UsefulLinksScreen"
-        component={UsefulLinksScreen}
+        name="Menu"
+        component={StackScreen}
         options={{
           tabBarIcon: () => (
             <Ionicons
-              name="link"
+              name="menu-sharp"
               style={styles.icon}
               size={20 * scaleFactor}
               color="black"
@@ -684,7 +685,7 @@ export default function App() {
             zIndex: 10,
           }}
         >
-          <NewsTicker headlines={tickerHeadlines} speedPxPerSec={40} />
+          <NewsTicker headlines={tickerHeadlines} speedPxPerSec={20} />
         </View>
       </View>
     </SafeAreaProvider>

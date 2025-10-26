@@ -8,13 +8,13 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#f5428d",
     onPress: "MissionScreen",
   },*/
-  /*{
+  {
     id: "1",
     icon: "organization",
     title: "Organograma",
     color: "#368dff",
     onPress: "OrganogramScreen",
-  },*/
+  },
   {
     id: "2",
     icon: "time-outline",

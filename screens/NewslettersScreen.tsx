@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View, Dimensions } from "react-native";
-import { NEWSLETTER_COLLECTIONS } from "../data/newsletters";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
+import { useNewsletters } from "../utils/useNewsletters";
 import NewsletterHighlightCard from "../components/newsletters/NewsletterHighlightCard";
 import NewsletterHistoryItem from "../components/newsletters/NewsletterHistoryItem";
 import NewsletterCoverModal from "../components/newsletters/NewsletterCoverModal";
@@ -19,6 +26,11 @@ type Highlight = {
 };
 
 const NewslettersScreen: React.FC = () => {
+  const {
+    newsletters,
+    loading: newslettersLoading,
+    error: newslettersError,
+  } = useNewsletters();
   const [coverUrls, setCoverUrls] = useState<Record<string, string>>({});
   const [error, setError] = useState<FirebaseError | undefined>(undefined);
   const [preview, setPreview] = useState<{
@@ -28,7 +40,7 @@ const NewslettersScreen: React.FC = () => {
 
   const issuesWithCoverPath = useMemo(
     () =>
-      NEWSLETTER_COLLECTIONS.flatMap((collection) =>
+      newsletters.flatMap((collection) =>
         collection.issues
           .filter((issue) => Boolean(issue.coverImagePath))
           .map((issue) => ({
@@ -36,7 +48,7 @@ const NewslettersScreen: React.FC = () => {
             path: issue.coverImagePath as string,
           }))
       ),
-    []
+    [newsletters]
   );
 
   const fetchCoverImages = useCallback(async () => {
@@ -89,7 +101,7 @@ const NewslettersScreen: React.FC = () => {
   const handleClosePreview = useCallback(() => setPreview(null), []);
 
   const highlights = useMemo<Highlight[]>(() => {
-    return NEWSLETTER_COLLECTIONS.reduce<Highlight[]>((acc, collection) => {
+    return newsletters.reduce<Highlight[]>((acc, collection) => {
       if (!collection.issues.length) {
         return acc;
       }
@@ -102,19 +114,41 @@ const NewslettersScreen: React.FC = () => {
       acc.push({ issue: sortedIssues[0], category: collection });
       return acc;
     }, []);
-  }, []);
+  }, [newsletters]);
 
   const history = useMemo(() => {
-    return NEWSLETTER_COLLECTIONS.flatMap((collection) =>
-      collection.issues.map((issue) => ({ issue, category: collection }))
-    ).sort(
-      (a, b) =>
-        new Date(b.issue.publishedAt).getTime() -
-        new Date(a.issue.publishedAt).getTime()
-    );
-  }, []);
+    return newsletters
+      .flatMap((collection) =>
+        collection.issues.map((issue) => ({ issue, category: collection }))
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.issue.publishedAt).getTime() -
+          new Date(a.issue.publishedAt).getTime()
+      );
+  }, [newsletters]);
 
   const previewCoverUri = preview ? coverUrls[preview.issue.id] : undefined;
+
+  // Show loading state
+  if (newslettersLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#3F51B5" />
+        <Text style={styles.loadingText}>A carregar newsletters...</Text>
+      </View>
+    );
+  }
+
+  // Show error state
+  if (newslettersError) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>Erro ao carregar newsletters</Text>
+        <Text style={styles.errorSubtext}>{newslettersError}</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -218,6 +252,27 @@ const styles = StyleSheet.create({
   },
   historyWrapper: {
     marginTop: 16 * scaleFactor,
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#52606d",
+  },
+  errorText: {
+    fontSize: 18 * scaleFactor,
+    fontWeight: "600",
+    color: "#e53e3e",
+    textAlign: "center",
+  },
+  errorSubtext: {
+    marginTop: 8 * scaleFactor,
+    fontSize: 14 * scaleFactor,
+    color: "#52606d",
+    textAlign: "center",
   },
 });
 
