@@ -118,12 +118,16 @@ const styles = StyleSheet.create({
     borderColor: "#2D5A87",
   },
   headNode: {
-    minWidth: 130 * scaleFactor,
+    minWidth: 250 * scaleFactor,
+    maxWidth: 250 * scaleFactor,
+    width: 250 * scaleFactor,
     minHeight: 85 * scaleFactor,
     borderColor: "#68D391",
   },
   divisionNode: {
-    minWidth: 120 * scaleFactor,
+    minWidth: 200 * scaleFactor,
+    maxWidth: 200 * scaleFactor,
+    width: 200 * scaleFactor,
     minHeight: 80 * scaleFactor,
     borderColor: "#C6F6D5",
   },
