@@ -71,4 +71,11 @@ export const MENU_ITEMS: MenuItem[] = [
     color: "#E33332",
     onPress: "LibFeatScreen",
   },
+  {
+    id: "9",
+    icon: "chatbubbles-outline",
+    title: "Pedidos de Informação",
+    color: "#4CAF50",
+    onPress: "InformationRequestScreen",
+  },
 ];

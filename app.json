@@ -20,11 +20,10 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "requireFullScreen": false
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +31,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.scorpaust.dgadrdigisignageandroidapp",
-      "versionCode": 1
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan",
+      "windowSoftInputMode": "adjustResize"
     },
     "web": {
       "favicon": "./assets/favicon.png"

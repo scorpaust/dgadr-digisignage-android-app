@@ -44,6 +44,7 @@ import { db } from "./config";
 import { onValue, ref } from "firebase/database";
 import LibFeatScreen from "./screens/LibFeatScreen";
 import NewslettersScreen from "./screens/NewslettersScreen";
+import InformationRequestScreen from "./screens/InformationRequestScreen";
 
 type FirebaseHeadlineRecord = {
   title?: unknown;
@@ -203,6 +204,18 @@ function StackScreen() {
         component={UsefulLinksScreen}
         options={{
           title: "As Nossas Ligações",
+          headerLeft: () => <BackButton />,
+          headerTitleStyle: {
+            fontSize: 24 * scaleFactor,
+          },
+          headerBackVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="InformationRequestScreen"
+        component={InformationRequestScreen}
+        options={{
+          title: "Pedidos de Informação",
           headerLeft: () => <BackButton />,
           headerTitleStyle: {
             fontSize: 24 * scaleFactor,

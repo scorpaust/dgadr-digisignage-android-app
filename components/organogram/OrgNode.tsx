@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  ViewStyle,
 } from "react-native";
 import { TreeNode } from "../../types/org";
 
@@ -25,7 +26,7 @@ const OrgNode: React.FC<OrgNodeProps> = ({ node, onPress, style }) => {
   };
 
   const getNodeStyle = () => {
-    const baseStyle = [styles.node];
+    const baseStyle: ViewStyle[] = [styles.node];
 
     if (node.color) {
       baseStyle.push({ backgroundColor: node.color });
@@ -60,7 +61,9 @@ const OrgNode: React.FC<OrgNodeProps> = ({ node, onPress, style }) => {
     return baseStyle;
   };
 
-  const NodeComponent = node.isClickable ? TouchableOpacity : View;
+  const NodeComponent: React.ComponentType<any> = node.isClickable
+    ? TouchableOpacity
+    : View;
 
   return (
     <NodeComponent
