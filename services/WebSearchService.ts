@@ -39,7 +39,6 @@ export class WebSearchService {
 
       return results.slice(0, 5); // Máximo 5 resultados
     } catch (error) {
-      console.error("Erro na pesquisa web:", error);
       return [];
     }
   }
@@ -83,7 +82,6 @@ export class WebSearchService {
 
       return results;
     } catch (error) {
-      console.error("Erro na pesquisa DuckDuckGo:", error);
       return [];
     }
   }
@@ -106,7 +104,6 @@ export class WebSearchService {
 
       return results.slice(0, 3); // Máximo 3 resultados de legislação
     } catch (error) {
-      console.error("Erro na pesquisa de legislação:", error);
       return [];
     }
   }

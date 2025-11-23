@@ -40,9 +40,8 @@ export class RealDataService {
       await this.loadLegislation();
 
       this.isLoaded = true;
-      console.log("✅ Dados reais da DGADR carregados");
     } catch (error) {
-      console.error("Erro ao carregar dados reais:", error);
+      // Erro silencioso para produção
     }
   }
 
@@ -538,7 +537,7 @@ Contactos: Atendimento Geral DGADR — 21 844 22 00 | geral@dgadr.pt
     this.procedures.set(
       "jovem_empresario_rural",
       `
-JOVEM AGRICULTOR (PEPAC)
+JOVEM AGRICULTOR (PEPAC) ou JOVEM EMPRESÁRIO RURAL
 Nota: o regime de instalação de jovens agricultores integra o PEPAC e a gestão de candidaturas/pagamentos é efetuada pelo IFAP.
 
 Requisitos (síntese):
@@ -693,6 +692,7 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
         "primeira instalação",
         "instalação",
         "plano empresarial",
+        "jovem empresário rural",
       ],
       biologica: ["biológica", "bio", "orgânica", "certificação", "conversão"],
       integrada: ["integrada", "produção integrada", "prodi", "sustentável"],
@@ -795,6 +795,14 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
         "título utilização recursos hídricos",
       ],
       vitivinicultura: ["vinho", "vinha", "plantação de vinha", "doc", "ivv"],
+      cartao_aplicador: [
+        "cartão aplicador",
+        "produtos fitofarmacêuticos",
+        "apf",
+        "renovação cartão",
+        "cartão fitossanitário",
+        "aplicador fitofarmacêuticos",
+      ],
     } as Record<string, string[]>;
 
     for (const [key, list] of Object.entries(map)) {
@@ -970,15 +978,23 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
       "rede rural",
     ];
 
-    if (inScope.some((t) => q.includes(t))) return false;
-
-    // Fora de âmbito (roteamento)
+    // Fora de âmbito (roteamento) - verifica primeiro para ter prioridade
     const out = [
       // DGAV
       "sanidade animal",
       "certificação veterinária",
       "segurança alimentar",
       "matadouro",
+      "capar",
+      "castrar",
+      "vacinar",
+      "bem-estar animal",
+      "cativeiro",
+      "porcos",
+      "aves",
+      "veterinário",
+      "doença animal",
+      "tratamento veterinário",
       // ICNF
       "licenciamento florestal",
       "corte de árvores",
@@ -1002,6 +1018,12 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
       "plantação de vinha",
       "autorização de plantação",
       "ivv",
+      // CCDR
+      "cartão aplicador",
+      "produtos fitofarmacêuticos",
+      "apf",
+      "renovação cartão",
+      "cartão fitossanitário",
       // outros não relacionados com agricultura/desenvolvimento rural
       "segurança social",
       "irs",
@@ -1037,9 +1059,17 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
       "pandemia",
       "meteorologia geral",
       "previsão do tempo",
+      "animais",
     ];
 
-    return out.some((t) => q.includes(t));
+    // Se encontrou termos fora de âmbito, retorna true
+    if (out.some((t) => q.includes(t))) return true;
+
+    // Se não encontrou termos fora de âmbito, verifica se está dentro do âmbito
+    if (inScope.some((t) => q.includes(t))) return false;
+
+    // Se não encontrou nem dentro nem fora, assume que está fora de âmbito
+    return true;
   }
 
   /** =====================================
@@ -1048,6 +1078,15 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
   private findExternalContacts(query: string): Contact[] {
     const q = query.toLowerCase();
     const out: Contact[] = [];
+
+    // Cartão de aplicador de produtos fitofarmacêuticos (CCDR)
+    if (
+      /(cart[aã]o.*aplicador|produtos fitofarmac[eê]uticos|apf|renova[cç][aã]o.*cart[aã]o|fitossanit[aá]rio)/.test(
+        q
+      )
+    ) {
+      out.push(...this.externalContacts.filter((c) => /CCDR/i.test(c.name)));
+    }
 
     // Recursos hídricos (APA/ARH)
     if (
@@ -1114,14 +1153,16 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
       );
     }
 
-    // Fallback externo
-    if (out.length === 0) {
-      const gpp = this.externalContacts.find((c) => /GPP/i.test(c.name));
-      if (gpp) out.push(gpp);
-      else if (this.externalContacts[0]) out.push(this.externalContacts[0]);
+    // Se não encontrou contactos específicos, retorna lista vazia
+    // O AIService vai tratar do fallback apropriado
+
+    // Para CCDR (cartão aplicador), mostra todas as regiões
+    const hasCCDR = out.some((c) => /CCDR/i.test(c.name));
+    if (hasCCDR) {
+      return out.filter((c) => /CCDR/i.test(c.name)); // Todas as CCDR
     }
 
-    // Máximo 2 contactos externos
+    // Para outras entidades, máximo 2 contactos
     return out.slice(0, 2);
   }
 }

@@ -30,7 +30,6 @@ export class AIService {
     try {
       if (validateAIConfig()) {
         this.openAIService = new OpenAIService(AI_CONFIG.OPENAI_API_KEY);
-        console.log("✅ OpenAI inicializada com sucesso");
       }
 
       await this.knowledgeService.loadKnowledgeBase();
@@ -38,9 +37,8 @@ export class AIService {
       await this.realDataService.loadRealData();
 
       this.isInitialized = true;
-      console.log("✅ AIService inicializado com sucesso");
     } catch (error) {
-      console.error("❌ Erro ao inicializar AIService:", error);
+      // Erro silencioso para produção
     }
   }
 
@@ -66,10 +64,7 @@ export class AIService {
           if (this.conversationHistory.length > 20) {
             this.conversationHistory = this.conversationHistory.slice(-20);
           }
-
-          console.log("✅ Resposta gerada pela OpenAI");
         } catch (openAIError) {
-          console.warn("⚠️ Erro na OpenAI, usando fallback:", openAIError);
           answer = this.generateFallbackResponse(query);
         }
       } else {
@@ -79,8 +74,13 @@ export class AIService {
       const keywords = this.extractKeywords(query);
       const realData = await this.realDataService.searchRealData(query);
 
+      // Verifica se a IA disse que não tem informação específica
+      const hasNoSpecificInfo =
+        answer.toLowerCase().includes("não tenho") ||
+        answer.toLowerCase().includes("não tenho essa informação");
+
       // Ajuste de âmbito institucional: DGADR é de âmbito nacional (não apenas Alentejo)
-      if (realData.isOutOfScope) {
+      if (realData.isOutOfScope || hasNoSpecificInfo) {
         // Verifica se é uma pergunta completamente irrelevante ou se tem encaminhamento
         const isCompletelyIrrelevant = this.isCompletelyIrrelevantQuery(query);
 
@@ -89,12 +89,24 @@ export class AIService {
             "Esta questão não se enquadra nas competências da DGADR. A DGADR atua em matérias de agricultura e desenvolvimento rural.";
           relevantContacts = []; // Não fornece contactos para perguntas irrelevantes
         } else {
-          answer =
-            "Exmo.(a) Senhor(a), a questão apresentada não se enquadra nas competências da DGADR. A DGADR tem âmbito nacional e atua em matérias de engenharia e ordenamento rural, regadio, infraestruturas hidráulicas, gestão de recursos naturais, qualidade e recursos genéticos, apoio às explorações e diversificação/associativismo. Para a sua questão, sugerimos o contacto com a entidade competente.";
+          // Para questões fora de âmbito ou sem informação específica, encaminha para entidade competente
           relevantContacts =
             realData.externalContacts && realData.externalContacts.length > 0
               ? realData.externalContacts
               : this.getExternalRedirections(keywords);
+
+          // Identifica a entidade específica na resposta
+          const entityName = this.getEntityNameFromContacts(relevantContacts);
+
+          if (hasNoSpecificInfo) {
+            answer = entityName
+              ? `Não tenho informação específica sobre este assunto. Para esta questão, sugerimos o contacto com a ${entityName}.`
+              : "Não tenho informação específica sobre este assunto. Para esta questão, sugerimos o contacto com a entidade competente.";
+          } else {
+            answer = entityName
+              ? `Exmo.(a) Senhor(a), a questão apresentada não se enquadra nas competências da DGADR. Para a sua questão, sugerimos o contacto com a ${entityName}.`
+              : "Exmo.(a) Senhor(a), a questão apresentada não se enquadra nas competências da DGADR. Para a sua questão, sugerimos o contacto com a entidade competente.";
+          }
         }
       } else {
         relevantContacts =
@@ -107,13 +119,15 @@ export class AIService {
         }
       }
 
+      // Otimização: apenas um contacto telefónico para segurança e performance
+      const optimizedContacts =
+        this.optimizeContactsForSecurity(relevantContacts);
+
       return {
         answer,
-        contacts: relevantContacts,
+        contacts: optimizedContacts,
       };
     } catch (error) {
-      console.error("❌ Erro ao processar pergunta:", error);
-
       return {
         answer:
           "Exmo.(a) Senhor(a), ocorreu um erro ao processar a sua questão. Por favor, utilize os nossos contactos institucionais para apoio.",
@@ -392,6 +406,25 @@ export class AIService {
         "segurança alimentar",
         "higiene",
         "estabelecimento",
+        "porco",
+        "suíno",
+        "bovino",
+        "ovino",
+        "caprino",
+        "avícola",
+        "bem-estar animal",
+        "cativeiro",
+        "capar",
+        "castrar",
+        "vacinar",
+      ],
+      CCDR: [
+        "cartão aplicador",
+        "produtos fitofarmacêuticos",
+        "apf",
+        "aplicador fitofarmacêuticos",
+        "renovação cartão",
+        "cartão fitossanitário",
       ],
       IFAP: ["apoio", "subsídio", "financiamento", "candidatura", "pepac"],
     };
@@ -461,6 +494,87 @@ export class AIService {
   }
 
   /**
+   * Otimiza contactos para segurança e performance
+   */
+  private optimizeContactsForSecurity(contacts: Contact[]): Contact[] {
+    if (contacts.length === 0) {
+      // Se não há contacto específico, usa o geral da DGADR
+      return [
+        {
+          name: "DGADR",
+          phone: "21 844 22 00",
+          email: "",
+          department: "Informações",
+        },
+      ];
+    }
+
+    // Verifica se são contactos CCDR (precisam de mostrar todos)
+    const areCCDRContacts = contacts.some((c) =>
+      c.name.toLowerCase().includes("ccdr")
+    );
+
+    if (areCCDRContacts) {
+      // Para CCDR, mostra todas as regiões (remove emails por segurança)
+      return contacts.map((contact) => ({
+        name: contact.name.replace(/CCDR\s*/i, "").trim(),
+        phone: contact.phone || "",
+        email: "", // Remove email por segurança
+        department: "Cartão Aplicador Fitofarmacêuticos",
+      }));
+    }
+
+    // Para outros contactos externos, apenas o primeiro
+    const primaryContact = contacts[0];
+    const isExternalContact = !primaryContact.phone?.startsWith("21 844");
+
+    if (isExternalContact) {
+      return [
+        {
+          name: primaryContact.name,
+          phone: primaryContact.phone || "",
+          email: "", // Remove email por segurança
+          department: primaryContact.department,
+        },
+      ];
+    } else {
+      // Para contactos DGADR, simplifica o nome
+      return [
+        {
+          name: "DGADR",
+          phone: primaryContact.phone || "21 844 22 00",
+          email: "", // Remove email por segurança
+          department: "Informações",
+        },
+      ];
+    }
+  }
+
+  /**
+   * Extrai o nome da entidade dos contactos para incluir na resposta
+   */
+  private getEntityNameFromContacts(contacts: Contact[]): string | null {
+    if (contacts.length === 0) return null;
+
+    const contact = contacts[0];
+    const name = contact.name.toLowerCase();
+
+    if (name.includes("dgav"))
+      return "DGAV (Direção-Geral de Alimentação e Veterinária)";
+    if (name.includes("icnf"))
+      return "ICNF (Instituto da Conservação da Natureza e das Florestas)";
+    if (name.includes("ifap"))
+      return "IFAP (Instituto de Financiamento da Agricultura e Pescas)";
+    if (name.includes("ccdr"))
+      return "CCDR da sua região (escolha conforme a localização da exploração)";
+    if (name.includes("apa")) return "APA (Agência Portuguesa do Ambiente)";
+    if (name.includes("arh"))
+      return "ARH (Administração da Região Hidrográfica)";
+
+    return contact.name;
+  }
+
+  /**
    * Verifica se a pergunta é completamente irrelevante para agricultura/desenvolvimento rural
    */
   private isCompletelyIrrelevantQuery(query: string): boolean {
@@ -501,35 +615,58 @@ export class AIService {
   }
 
   /**
-   * Encaminhamentos externos padrão, quando fora de âmbito.
+   * Encaminhamentos externos baseados no conteúdo da pergunta
    */
   private getExternalRedirections(keywords: string[]): Contact[] {
+    const query = keywords.join(" ").toLowerCase();
     const list: Contact[] = [];
-    if (keywords.includes("DGAV")) {
+
+    // Assuntos veterinários/animais → DGAV
+    if (
+      keywords.includes("DGAV") ||
+      /animal|veterinár|sanidade|doença|certificado|matadouro|segurança alimentar|capar|castrar|vacinar|bem-estar animal|porco|vaca|ovelha|cabra|galinha|suíno|bovino|ovino|caprino|avícola|cativeiro|manter.*animal/.test(
+        query
+      )
+    ) {
       list.push({
-        name: "Direção-Geral de Alimentação e Veterinária (DGAV)",
+        name: "DGAV",
         phone: "213 239 500",
-        email: "geral@dgav.pt",
+        email: "",
         department: "Sanidade Animal e Segurança Alimentar",
       });
     }
-    if (keywords.includes("ICNF")) {
+
+    // Assuntos florestais → ICNF
+    if (
+      keywords.includes("ICNF") ||
+      /floresta|árvore|corte|licenciamento florestal|caça|natura/.test(query)
+    ) {
       list.push({
-        name: "Instituto da Conservação da Natureza e das Florestas (ICNF)",
+        name: "ICNF",
         phone: "213 507 900",
-        email: "geral@icnf.pt",
+        email: "",
         department: "Assuntos Florestais",
       });
     }
-    if (keywords.includes("IFAP")) {
+
+    // Candidaturas e pagamentos → IFAP
+    if (
+      keywords.includes("IFAP") ||
+      /candidatura|pagamento|pepac|parcelário|apoio financeiro/.test(query)
+    ) {
       list.push({
-        name: "IFAP, I.P.",
+        name: "IFAP",
         phone: "212 427 708",
-        email: "ifap@ifap.pt",
-        department: "Candidaturas e Pagamentos (PEPAC)",
+        email: "",
+        department: "Candidaturas e Pagamentos",
       });
     }
-    return list.length > 0 ? list : [];
+
+    // Para cartão aplicador, não cria contactos aqui - deixa o RealDataService tratar
+    // (o RealDataService tem todas as CCDR definidas)
+
+    // Se não encontrou nenhum específico, retorna contacto geral da DGADR
+    return list.length > 0 ? list : this.getDefaultContacts();
   }
 
   private getDefaultContacts(): Contact[] {

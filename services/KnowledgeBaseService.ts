@@ -24,9 +24,7 @@ export class KnowledgeBaseService {
       this.loadExpandedKnowledge();
 
       this.isLoaded = true;
-      console.log("✅ Base de conhecimento carregada com sucesso");
     } catch (error) {
-      console.error("Erro ao carregar base de conhecimento:", error);
       this.loadBasicKnowledge();
     }
   }
@@ -35,9 +33,7 @@ export class KnowledgeBaseService {
     try {
       // Por agora usa links padrão - em produção carregaria de fonte externa
       this.links = this.getDefaultLinks();
-      console.log(`✅ Carregados ${this.links.length} links (padrão)`);
     } catch (error) {
-      console.error("Erro ao carregar links:", error);
       this.links = this.getDefaultLinks();
     }
   }
@@ -92,7 +88,7 @@ ENCAMINHAMENTOS FORA DE ÂMBITO DGADR:
 
 AGRICULTURA E APOIOS (enquadramento técnico):
 - PEPAC/Portugal: enquadramento técnico DGADR; candidaturas e pagamentos via IFAP
-- Jovens agricultores, investimentos, modernização, bio, agroambientais: consultar avisos/IFAP e orientações técnicas DGADR
+- Jovens agricultores/Jovem Empresário Rural, investimentos, modernização, bio, agroambientais: consultar avisos/IFAP e orientações técnicas DGADR
 
 ORDENAMENTO, ENGENHARIA E REGA:
 - Ordenamento do espaço rural, estruturação fundiária, caminhos e drenagem (DOER/DER)

@@ -68,10 +68,7 @@ const NewslettersScreen: React.FC = () => {
             if (coverError instanceof FirebaseError) {
               setError(coverError);
             }
-            console.error(
-              `[Newsletters] Falha ao obter a capa da newsletter ${id} (${path}).`,
-              coverError
-            );
+            // Erro silencioso
             return null;
           }
         })
@@ -86,10 +83,7 @@ const NewslettersScreen: React.FC = () => {
       if (storageError instanceof FirebaseError) {
         setError(storageError);
       }
-      console.error(
-        "[Newsletters] Erro inesperado a carregar capas.",
-        storageError
-      );
+      // Erro silencioso
     }
   }, [issuesWithCoverPath]);
 

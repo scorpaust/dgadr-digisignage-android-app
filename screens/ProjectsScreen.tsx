@@ -16,20 +16,12 @@ const scaleFactor = Math.min(windowWidth / 320, 2.5);
 const ProjectsScreen: React.FC = () => {
   const { imageUrls, loading, error, images } = useStorageImages("projetos", {
     shuffle: false, // Keep original order for projects
-    autoRefresh: false, // Disable auto-refresh for debugging
+    autoRefresh: false,
     refreshInterval: 300000,
   });
 
-  // Debug logging
   React.useEffect(() => {
-    console.log("ProjectsScreen Debug:", {
-      loading,
-      error,
-      imageUrlsCount: imageUrls.length,
-      imagesCount: images.length,
-      firstImageUrl: imageUrls[0],
-      firstImage: images[0],
-    });
+    // Effect para monitorizar mudanças
   }, [loading, error, imageUrls, images]);
 
   if (loading) {
@@ -46,9 +38,6 @@ const ProjectsScreen: React.FC = () => {
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.errorText}>Erro ao carregar projetos</Text>
         <Text style={styles.errorSubtext}>{error}</Text>
-        <Text style={styles.debugText}>
-          Debug: Verifique a consola para mais detalhes
-        </Text>
       </View>
     );
   }
@@ -57,18 +46,12 @@ const ProjectsScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.emptyText}>Nenhum projeto encontrado</Text>
-        <Text style={styles.debugText}>
-          Debug: A pasta 'projetos' pode não existir no Firebase Storage
-        </Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.debugText}>
-        Debug: {imageUrls.length} imagens carregadas
-      </Text>
       <ImageCarousel
         imageLinks={imageUrls}
         autoplay={true}

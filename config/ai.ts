@@ -21,9 +21,6 @@ export const validateAIConfig = (): boolean => {
     !AI_CONFIG.OPENAI_API_KEY ||
     AI_CONFIG.OPENAI_API_KEY === "sua-chave-openai-aqui"
   ) {
-    console.warn(
-      "⚠️  Chave da OpenAI não configurada. Usando IA básica como fallback."
-    );
     return false;
   }
   return true;

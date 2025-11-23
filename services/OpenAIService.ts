@@ -38,6 +38,7 @@ REGRAS CRÍTICAS:
 
 DETEÇÃO DE ÂMBITO:
 - Se a pergunta for sobre desporto, entretenimento, política, saúde, tecnologia, turismo urbano, educação escolar, ou outros temas não relacionados com agricultura/desenvolvimento rural, responde: "Esta questão não se enquadra nas competências da DGADR. A DGADR atua em matérias de agricultura e desenvolvimento rural."
+- Se a pergunta for sobre assuntos agrícolas/rurais mas que são competência de outras entidades (ex: florestas→ICNF, veterinária/animais/capar/castrar→DGAV, pagamentos→IFAP), responde: "Não tenho informação específica sobre este assunto."
 - NÃO forneças contactos para perguntas completamente fora de âmbito
 
 FERRAMENTAS DISPONÍVEIS:
@@ -46,10 +47,11 @@ Tens acesso a ferramentas de pesquisa em ficheiros internos da DGADR.
 INSTRUÇÕES:
 - SEMPRE pesquisa informação específica antes de responder
 - Usa APENAS dados reais dos ficheiros da DGADR
-- Respostas diretas baseadas em informação encontrada
-- Inclui contactos específicos quando relevante
+- Respostas CONCISAS e diretas (máximo 2-3 frases)
 - Tom formal mas acessível
-- Máximo 4-5 frases por resposta
+- Foca apenas na informação essencial
+- NUNCA menciones números de telefone ou emails na resposta
+- O contacto será fornecido automaticamente pelo sistema
 - Se não encontrares informação, diz "Não tenho essa informação específica"
 
 PROCESSO:
@@ -100,8 +102,8 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
         this.systemPrompt +
         contextInfo +
         "\n\nCom base na informação específica acima, responde à pergunta do utilizador de forma direta e precisa." +
-        "\n\nLEMBRETE CRÍTICO: Se mencionares contacto da DGADR, usa SEMPRE e APENAS: 21 844 22 00 | geral@dgadr.pt" +
-        "\nNUNCA inventes outros números de telefone.";
+        "\n\nLEMBRETE CRÍTICO: NÃO menciones números de telefone ou emails na resposta." +
+        "\nO contacto será fornecido automaticamente pelo sistema.";
 
       const messages: OpenAIMessage[] = [
         { role: "system", content: enhancedPrompt },
@@ -123,8 +125,8 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
           body: JSON.stringify({
             model: "gpt-4o-mini",
             messages: messages,
-            max_tokens: 800,
-            temperature: 0.7,
+            max_tokens: 400, // Reduzido para respostas mais concisas e rápidas
+            temperature: 0.5, // Reduzido para respostas mais focadas
             presence_penalty: 0.1,
             frequency_penalty: 0.1,
           }),
@@ -132,8 +134,6 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
       );
 
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error("OpenAI API Error:", response.status, errorData);
         throw new Error(`OpenAI API Error: ${response.status}`);
       }
 
@@ -148,7 +148,6 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
 
       return aiResponse;
     } catch (error) {
-      console.error("Erro OpenAI:", error);
       throw new Error("Erro ao processar pergunta com IA");
     }
   }
@@ -181,21 +180,16 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
 
     let correctedResponse = response;
 
-    // Substitui todos os números incorretos pelo número correto
-    incorrectNumbers.forEach((incorrectNumber) => {
-      const regex = new RegExp(incorrectNumber.replace(/\s/g, "\\s*"), "gi");
-      correctedResponse = correctedResponse.replace(regex, "21 844 22 00");
-    });
-
-    // Garante que qualquer menção genérica a "contactar a DGADR" inclui o número correto
-    if (
-      correctedResponse.toLowerCase().includes("contactar a dgadr") ||
-      correctedResponse.toLowerCase().includes("contacte a dgadr")
-    ) {
-      if (!correctedResponse.includes("21 844 22 00")) {
-        correctedResponse += " (21 844 22 00 | geral@dgadr.pt)";
-      }
-    }
+    // Remove qualquer menção a números de telefone ou emails da resposta
+    correctedResponse = correctedResponse.replace(
+      /21\s*844\s*\d{2}\s*\d{2}/g,
+      ""
+    );
+    correctedResponse = correctedResponse.replace(/geral@dgadr\.pt/gi, "");
+    correctedResponse = correctedResponse.replace(/\(\s*\|\s*\)/g, ""); // Remove () vazios
+    correctedResponse = correctedResponse.replace(/\s+\|\s*$/g, ""); // Remove | no final
+    correctedResponse = correctedResponse.replace(/\s{2,}/g, " "); // Remove espaços duplos
+    correctedResponse = correctedResponse.trim();
 
     return correctedResponse;
   }

@@ -22,9 +22,8 @@ export class FileSearchService {
     try {
       await this.loadStaticKnowledge();
       this.isLoaded = true;
-      console.log("✅ Ficheiros de conhecimento carregados");
     } catch (error) {
-      console.error("Erro ao carregar ficheiros:", error);
+      // Erro silencioso para produção
     }
   }
 

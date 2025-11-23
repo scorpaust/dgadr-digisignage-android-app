@@ -42,7 +42,6 @@ const MediaScreen = () => {
         const state = await NetInfo.fetch();
         setIsConnected(state.isConnected);
       } catch (error) {
-        console.error("Erro na conexão à Internet:", error);
         setIsConnected(false);
       }
     };

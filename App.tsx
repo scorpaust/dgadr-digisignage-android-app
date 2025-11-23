@@ -511,12 +511,10 @@ export default function App() {
           return b.primary - a.primary;
         });
 
-        console.log(items.map((item) => item.title));
-
         setFirebaseHeadlines(items.map((item) => item.title));
       },
       (error) => {
-        console.warn("[news] Firebase headlines listener erro:", error);
+        // Erro silencioso
       }
     );
 
@@ -603,7 +601,6 @@ export default function App() {
       const ms = Math.max(500, next.getTime() - now.getTime());
       if (timer) clearTimeout(timer);
       timer = setTimeout(runIfNewSlot, ms);
-      // console.log("[news] next slot @", next.toLocaleString(), "in", Math.round(ms/1000), "s");
     };
 
     const runIfNewSlot = async () => {

@@ -95,8 +95,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
       onAddMessage(chatId, aiMessage);
     } catch (error) {
-      console.error("Erro ao processar pergunta:", error);
-
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: "Peço desculpa, mas ocorreu um erro ao processar a sua pergunta. Por favor, tente novamente ou contacte-nos diretamente através dos nossos canais oficiais.",
@@ -179,45 +177,32 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         {/* Contactos (apenas para mensagens da IA) */}
         {!item.isUser && item.contacts && item.contacts.length > 0 && (
           <View style={styles.contactsContainer}>
-            <Text style={styles.contactsTitle}>Contactos relevantes:</Text>
-            {item.contacts.map((contact, index) => (
-              <View key={index} style={styles.contactItem}>
-                <Text style={styles.contactName}>{contact.name}</Text>
-                <Text style={styles.contactDepartment}>
-                  {contact.department}
-                </Text>
-                {contact.phone && (
-                  <TouchableOpacity
-                    style={styles.contactButton}
-                    onPress={() => handlePhonePress(contact.phone!)}
-                  >
-                    <Ionicons
-                      name="call"
-                      size={14 * scaleFactor}
-                      color="#7eda3b"
-                    />
-                    <Text style={styles.contactButtonText}>
-                      {contact.phone}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {contact.email && (
-                  <TouchableOpacity
-                    style={styles.contactButton}
-                    onPress={() => handleEmailPress(contact.email!)}
-                  >
-                    <Ionicons
-                      name="mail"
-                      size={14 * scaleFactor}
-                      color="#7eda3b"
-                    />
-                    <Text style={styles.contactButtonText}>
-                      {contact.email}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
+            <Text style={styles.contactsTitle}>
+              {item.contacts.length > 1 ? "Contactos:" : "Contacto:"}
+            </Text>
+            {item.contacts.map(
+              (contact, index) =>
+                contact.phone && (
+                  <View key={index} style={styles.contactItem}>
+                    {item.contacts.length > 1 && (
+                      <Text style={styles.contactRegion}>{contact.name}</Text>
+                    )}
+                    <TouchableOpacity
+                      style={styles.phoneContactButton}
+                      onPress={() => handlePhonePress(contact.phone!)}
+                    >
+                      <Ionicons
+                        name="call"
+                        size={16 * scaleFactor}
+                        color="#fff"
+                      />
+                      <Text style={styles.phoneContactText}>
+                        {contact.phone}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )
+            )}
           </View>
         )}
 
@@ -372,34 +357,34 @@ const styles = StyleSheet.create({
     borderTopColor: "#e0e0e0",
   },
   contactsTitle: {
-    fontSize: 14 * scaleFactor,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8 * scaleFactor,
+    fontSize: 13 * scaleFactor,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 6 * scaleFactor,
   },
   contactItem: {
-    marginBottom: 8 * scaleFactor,
+    marginBottom: 6 * scaleFactor,
   },
-  contactName: {
-    fontSize: 14 * scaleFactor,
-    fontWeight: "600",
-    color: "#333",
-  },
-  contactDepartment: {
+  contactRegion: {
     fontSize: 12 * scaleFactor,
-    color: "#666",
+    fontWeight: "500",
+    color: "#333",
     marginBottom: 4 * scaleFactor,
   },
-  contactButton: {
+  phoneContactButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 2 * scaleFactor,
+    backgroundColor: "#7eda3b",
+    paddingHorizontal: 12 * scaleFactor,
+    paddingVertical: 8 * scaleFactor,
+    borderRadius: 20 * scaleFactor,
+    alignSelf: "flex-start",
   },
-  contactButtonText: {
-    fontSize: 12 * scaleFactor,
-    color: "#7eda3b",
-    marginLeft: 4 * scaleFactor,
-    textDecorationLine: "underline",
+  phoneContactText: {
+    fontSize: 14 * scaleFactor,
+    color: "#fff",
+    fontWeight: "600",
+    marginLeft: 6 * scaleFactor,
   },
   inputContainer: {
     flexDirection: "row",

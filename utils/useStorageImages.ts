@@ -37,7 +37,6 @@ export function useStorageImages(
       setImages(mediaItems);
       setImageUrls(urls);
     } catch (err) {
-      console.error(`Error loading images from ${folderPath}:`, err);
       setError(`Failed to load images from ${folderPath}`);
     } finally {
       if (showLoading) setLoading(false);
@@ -56,7 +55,6 @@ export function useStorageImages(
       setImages(mediaItems);
       setImageUrls(urls);
     } catch (err) {
-      console.error(`Error refreshing images from ${folderPath}:`, err);
       setError(`Failed to refresh images from ${folderPath}`);
     }
   };
@@ -110,7 +108,6 @@ export function useMultipleFolderImages(
       setImages(mediaItems);
       setImageUrls(urls);
     } catch (err) {
-      console.error("Error loading images from multiple folders:", err);
       setError("Failed to load images from folders");
     } finally {
       setLoading(false);

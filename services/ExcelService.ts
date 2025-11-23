@@ -23,10 +23,8 @@ export class ExcelService {
       this.contacts = this.getDefaultContacts();
       this.isLoaded = true;
 
-      console.log(`✅ Carregados ${this.contacts.length} contactos (padrão)`);
       return this.contacts;
     } catch (error) {
-      console.error("Erro ao carregar contactos:", error);
       this.contacts = this.getDefaultContacts();
       return this.contacts;
     }
