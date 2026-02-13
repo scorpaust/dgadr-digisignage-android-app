@@ -63,7 +63,9 @@
     "react-native-snap-carousel": "4.0.0-beta.6",
     "react-native-svg": "13.9.0",
     "react-native-vector-icons": "^10.0.2",
+    "set-value": "^4.1.0",
     "update": "^0.7.4",
+    "upgrade": "^1.1.0",
     "xlsx-populate": "^1.21.0"
   },
   "devDependencies": {

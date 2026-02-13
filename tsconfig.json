@@ -3,6 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "typeRoots": ["./types"]
+    "typeRoots": ["./types", "./node_modules/@types"]
   }
 }
