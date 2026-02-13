@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run genkit:ingest:*)",
+      "Bash(node -e:*)",
+      "Bash(ls:*)",
+      "Bash(npx ts-node:*)"
+    ]
+  }
+}

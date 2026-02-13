@@ -134,7 +134,13 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
       );
 
       if (!response.ok) {
-        throw new Error(`OpenAI API Error: ${response.status}`);
+        const errorBody = await response.text();
+        console.error('❌ OpenAI API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorBody
+        });
+        throw new Error(`OpenAI API Error: ${response.status} - ${response.statusText}`);
       }
 
       const data: OpenAIResponse = await response.json();
@@ -147,8 +153,9 @@ NUNCA uses outros números que não estejam nos ficheiros fornecidos.`;
       aiResponse = this.validateAndFixDGADRNumbers(aiResponse);
 
       return aiResponse;
-    } catch (error) {
-      throw new Error("Erro ao processar pergunta com IA");
+    } catch (error: any) {
+      console.error('❌ OpenAI Service Error:', error.message || error);
+      throw new Error(`Erro ao processar pergunta com IA: ${error.message || 'Unknown error'}`);
     }
   }
 

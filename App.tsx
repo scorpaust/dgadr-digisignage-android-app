@@ -89,7 +89,7 @@ function StackScreen() {
           headerTitle: () => (
             <View style={{ padding: "5%" }}>
               <Image
-                style={{ width: 110 * scaleFactor, height: 30 * scaleFactor }}
+                style={{ width: 110 * scaleFactor, height: 30 * scaleFactor }}a
                 source={require("./assets/dgadr-logo.png")}
               />
             </View>

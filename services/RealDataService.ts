@@ -531,7 +531,7 @@ Encaminhamentos úteis:
 - IFAP (articulação com apoios/PEPAC quando aplicável)
 
 Contactos: Atendimento Geral DGADR — 21 844 22 00 | geral@dgadr.pt
-`
+`,
     );
 
     this.procedures.set(
@@ -555,7 +555,7 @@ Competências:
 - IFAP: candidaturas, elegibilidade administrativa e pagamentos.
 
 Contactos: IFAP (candidaturas) | DGADR (enquadramento técnico)
-`
+`,
     );
 
     this.procedures.set(
@@ -575,7 +575,7 @@ Encaminhamentos:
 - DGADR: informação setorial, recursos técnicos (ex.: Rede Rural, Biblioteca DGADR).
 
 Contactos: DGAV (normas/OC) | Biblioteca DGADR (recursos técnicos)
-`
+`,
     );
 
     this.procedures.set(
@@ -592,7 +592,7 @@ Como proceder:
 Encaminhamentos:
 - AT (processo e reembolsos/isenções);
 - IFAP (elegibilidade setorial ligada à atividade agrícola, quando aplicável).
-`
+`,
     );
 
     this.procedures.set(
@@ -608,7 +608,7 @@ Como proceder:
 Encaminhamentos:
 - IMT, I.P. (veículos);
 - DGADR/DER (engenharia rural — segurança em operações e vias rurais).
-`
+`,
     );
   }
 
@@ -624,7 +624,7 @@ LEGISLAÇÃO — AGRICULTURA FAMILIAR
 - Decreto-Lei n.º 64/2018 — Estatuto da Agricultura Familiar (EAF)
 - Regulamentação complementar aplicável e orientações DGADR
 - PEPAC/Portugal — enquadramento de medidas relacionadas (IFAP)
-`
+`,
     );
 
     this.legislation.set(
@@ -634,7 +634,7 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
 - Regulamento (UE) 2018/848 — Produção biológica e rotulagem
 - Atos de execução/delegados da UE aplicáveis
 - Normas nacionais e orientações DGAV (organismos de controlo)
-`
+`,
     );
   }
 
@@ -843,7 +843,7 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
             return /mecaniza[cç][aã]o|tratores?/.test(s);
           case "agrupamento":
             return /agrupamentos?|organiza[cç][oõ]es de produtores|cooperativas?/.test(
-              s
+              s,
             );
           case "formacao":
             return /forma[cç][aã]o|capacita[cç][aã]o/.test(s);
@@ -877,7 +877,7 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
 
     // Dedup por email e limita a 3
     const unique = results.filter(
-      (c, i, arr) => i === arr.findIndex((x) => x.email === c.email)
+      (c, i, arr) => i === arr.findIndex((x) => x.email === c.email),
     );
 
     return unique.slice(0, 3);
@@ -949,6 +949,7 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
       "saaf",
       "agrifam",
       "jovem agricultor",
+      "jovem empresário rural",
       "primeira instalação",
       "pepac",
       "produção integrada",
@@ -1082,7 +1083,7 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
     // Cartão de aplicador de produtos fitofarmacêuticos (CCDR)
     if (
       /(cart[aã]o.*aplicador|produtos fitofarmac[eê]uticos|apf|renova[cç][aã]o.*cart[aã]o|fitossanit[aá]rio)/.test(
-        q
+        q,
       )
     ) {
       out.push(...this.externalContacts.filter((c) => /CCDR/i.test(c.name)));
@@ -1091,13 +1092,13 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
     // Recursos hídricos (APA/ARH)
     if (
       /(po[cç]o|furo|capta[cç][aã]o|dom[ií]nio p[úu]blico h[ií]drico|t[ií]tulo utiliza[cç][aã]o)/.test(
-        q
+        q,
       )
     ) {
       out.push(
         ...this.externalContacts.filter((c) =>
-          /APA|Administra[cç][aã]o da Regi[aã]o Hidrogr[aá]fica/i.test(c.name)
-        )
+          /APA|Administra[cç][aã]o da Regi[aã]o Hidrogr[aá]fica/i.test(c.name),
+        ),
       );
     }
 
@@ -1105,15 +1106,15 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
     if (/(parcel[aá]rio|ifap|pepac|pagamento|candidatura)/.test(q)) {
       out.push(
         ...this.externalContacts.filter(
-          (c) => /IFAP/i.test(c.name) || /Parcel[aá]rio/.test(c.department)
-        )
+          (c) => /IFAP/i.test(c.name) || /Parcel[aá]rio/.test(c.department),
+        ),
       );
     }
 
     // DGAV — sanidade/segurança alimentar/MPB (certificação/OC)
     if (
       /(sanidade|veterin[aá]ria|seguran[çc]a alimentar|matadouro|oc biol[oó]gico)/.test(
-        q
+        q,
       )
     ) {
       out.push(...this.externalContacts.filter((c) => /DGAV/i.test(c.name)));
@@ -1148,8 +1149,8 @@ LEGISLAÇÃO — PRODUÇÃO BIOLÓGICA
     if (/(gas[oó]leo|benef[ií]cio fiscal|reembolso)/.test(q)) {
       out.push(
         ...this.externalContacts.filter((c) =>
-          /Autoridade Tribut[aá]ria|AT/i.test(c.name)
-        )
+          /Autoridade Tribut[aá]ria|AT/i.test(c.name),
+        ),
       );
     }
 

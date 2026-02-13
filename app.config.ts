@@ -9,6 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   owner: "scorpaust",
   extra: {
     mediaStackApiKey: process.env.MEDIASTACK_API_KEY,
+    GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
     eas: {
       projectId: "9865a449-ce96-4dc8-b5c2-f484cfd397fb", // Ensure projectId is included
     },

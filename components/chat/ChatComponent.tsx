@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback, memo } from "react";
 import {
   View,
   Text,
@@ -39,7 +39,10 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   const [showVirtualKeyboard, setShowVirtualKeyboard] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const textInputRef = useRef<TextInput>(null);
-  const aiService = new AIService();
+
+  const aiServiceRef = useRef<AIService | null>(null);
+  if (!aiServiceRef.current) aiServiceRef.current = new AIService();
+  const aiService = aiServiceRef.current;
 
   useEffect(() => {
     // Scroll para a última mensagem quando há novas mensagens
@@ -108,7 +111,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
 
-  const handlePhonePress = (phone: string) => {
+  const handlePhonePress = useCallback((phone: string) => {
     Alert.alert("Contactar", `Deseja ligar para ${phone}?`, [
       { text: "Cancelar", style: "cancel" },
       {
@@ -116,9 +119,9 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         onPress: () => Linking.openURL(`tel:${phone}`),
       },
     ]);
-  };
+  }, []);
 
-  const handleEmailPress = (email: string) => {
+  const handleEmailPress = useCallback((email: string) => {
     Alert.alert("Contactar", `Deseja enviar email para ${email}?`, [
       { text: "Cancelar", style: "cancel" },
       {
@@ -126,7 +129,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         onPress: () => Linking.openURL(`mailto:${email}`),
       },
     ]);
-  };
+  }, []);
 
   // Funções do teclado virtual
   const handleVirtualKeyPress = (key: string) => {
@@ -152,69 +155,14 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.isUser ? styles.userMessage : styles.aiMessage,
-      ]}
-    >
-      <View
-        style={[
-          styles.messageBubble,
-          item.isUser ? styles.userBubble : styles.aiBubble,
-        ]}
-      >
-        <Text
-          style={[
-            styles.messageText,
-            item.isUser ? styles.userText : styles.aiText,
-          ]}
-        >
-          {item.text}
-        </Text>
-
-        {/* Contactos (apenas para mensagens da IA) */}
-        {!item.isUser && item.contacts && item.contacts.length > 0 && (
-          <View style={styles.contactsContainer}>
-            <Text style={styles.contactsTitle}>
-              {item.contacts.length > 1 ? "Contactos:" : "Contacto:"}
-            </Text>
-            {item.contacts.map(
-              (contact, index) =>
-                contact.phone && (
-                  <View key={index} style={styles.contactItem}>
-                    {item.contacts.length > 1 && (
-                      <Text style={styles.contactRegion}>{contact.name}</Text>
-                    )}
-                    <TouchableOpacity
-                      style={styles.phoneContactButton}
-                      onPress={() => handlePhonePress(contact.phone!)}
-                    >
-                      <Ionicons
-                        name="call"
-                        size={16 * scaleFactor}
-                        color="#fff"
-                      />
-                      <Text style={styles.phoneContactText}>
-                        {contact.phone}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )
-            )}
-          </View>
-        )}
-
-        <Text style={styles.timestamp}>
-          {item.timestamp.toLocaleTimeString("pt-PT", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
-      </View>
-    </View>
+  const renderMessage = useCallback(
+    ({ item }: { item: Message }) => (
+      <MessageItem item={item} onPhonePress={handlePhonePress} />
+    ),
+    [handlePhonePress],
   );
+
+  const keyExtractor = useCallback((item: Message) => item.id, []);
 
   return (
     <KeyboardAvoidingView
@@ -225,9 +173,14 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         style={styles.messagesList}
         contentContainerStyle={styles.messagesContent}
+        initialNumToRender={8}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        removeClippedSubviews
+        updateCellsBatchingPeriod={80}
       />
 
       <View style={styles.inputContainer}>
@@ -289,7 +242,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           )}
         </TouchableOpacity>
       </View>
-
       {/* Teclado Virtual */}
       <VirtualKeyboard
         visible={showVirtualKeyboard}
@@ -426,3 +378,82 @@ const styles = StyleSheet.create({
 });
 
 export default ChatComponent;
+
+interface MessageItemProps {
+  item: Message;
+  onPhonePress: (phone: string) => void;
+}
+
+const MessageItem = memo(({ item, onPhonePress }: MessageItemProps) => {
+  const contacts = item.contacts ?? [];
+  const shouldShowContacts = !item.isUser && contacts.length > 0;
+
+  return (
+    <View
+      style={[
+        styles.messageContainer,
+        item.isUser ? styles.userMessage : styles.aiMessage,
+      ]}
+    >
+      <View
+        style={[
+          styles.messageBubble,
+          item.isUser ? styles.userBubble : styles.aiBubble,
+        ]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            item.isUser ? styles.userText : styles.aiText,
+          ]}
+        >
+          {item.text}
+        </Text>
+
+        {shouldShowContacts && (
+          <View style={styles.contactsContainer}>
+            <Text style={styles.contactsTitle}>
+              {contacts.length > 1 ? "Contactos:" : "Contacto:"}
+            </Text>
+            {contacts.map(
+              (contact, index) =>
+                contact.phone && (
+                  <View key={index} style={styles.contactItem}>
+                    {(contacts.length > 1 ||
+                      (contact.name && contact.name !== "DGADR")) && (
+                      <Text style={styles.contactRegion}>
+                        {contact.name}
+                        {contact.department ? ` - ${contact.department}` : ""}
+                      </Text>
+                    )}
+                    <TouchableOpacity
+                      style={styles.phoneContactButton}
+                      onPress={() => onPhonePress(contact.phone!)}
+                    >
+                      <Ionicons
+                        name="call"
+                        size={16 * scaleFactor}
+                        color="#fff"
+                      />
+                      <Text style={styles.phoneContactText}>
+                        {contact.phone}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ),
+            )}
+          </View>
+        )}
+
+        <Text style={styles.timestamp}>
+          {item.timestamp.toLocaleTimeString("pt-PT", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
+      </View>
+    </View>
+  );
+});
+
+MessageItem.displayName = "MessageItem";

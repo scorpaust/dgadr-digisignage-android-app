@@ -1,5 +1,6 @@
 import { Contact, AIResponse } from "../types/chat";
 import { OpenAIService } from "./OpenAIService";
+import { RAGService } from "./RAGService";
 import { ExcelService } from "./ExcelService";
 import { KnowledgeBaseService } from "./KnowledgeBaseService";
 import { RealDataService } from "./RealDataService";
@@ -7,38 +8,63 @@ import { AI_CONFIG, validateAIConfig } from "../config/ai";
 
 export class AIService {
   private openAIService: OpenAIService | null = null;
+  private ragService: RAGService;
   private excelService: ExcelService;
   private knowledgeService: KnowledgeBaseService;
   private realDataService: RealDataService;
+
   private conversationHistory: Array<{
     role: "user" | "assistant";
     content: string;
   }> = [];
+
   private isInitialized = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor() {
+    this.ragService = RAGService.getInstance();
     this.excelService = ExcelService.getInstance();
     this.knowledgeService = KnowledgeBaseService.getInstance();
     this.realDataService = RealDataService.getInstance();
-    // Nota: initializeServices é async; processQuery volta a chamar para garantir que ficou concluído.
-    void this.initializeServices();
+
+    // ❌ NÃO auto-inicializar aqui.
+    // A inicialização passa a ser lazy e com lock em processQuery().
   }
 
-  private async initializeServices() {
+  private async initializeServices(): Promise<void> {
     if (this.isInitialized) return;
+    if (this.initPromise) return this.initPromise;
 
-    try {
+    this.initPromise = (async () => {
+      // Em dev, convém ver erros. Em prod podes silenciar.
+      // console.log("AIService: initializing...");
+
+      // Faz init "à prova de falhas": uma coisa pode falhar sem rebentar tudo.
+      const results = await Promise.allSettled([
+        this.ragService.loadKnowledgeBase(),
+        this.knowledgeService.loadKnowledgeBase(),
+        this.excelService.loadContacts(),
+        this.realDataService.loadRealData(),
+      ]);
+
+      // OpenAI é opcional
       if (validateAIConfig()) {
         this.openAIService = new OpenAIService(AI_CONFIG.OPENAI_API_KEY);
       }
 
-      await this.knowledgeService.loadKnowledgeBase();
-      await this.excelService.loadContacts();
-      await this.realDataService.loadRealData();
+      // Se quiseres, podes logar as falhas em dev:
+      // results.forEach((r, i) => {
+      //   if (r.status === "rejected") console.warn("Init step failed:", i, r.reason);
+      // });
 
       this.isInitialized = true;
-    } catch (error) {
-      // Erro silencioso para produção
+    })();
+
+    try {
+      await this.initPromise;
+    } finally {
+      // Liberta o lock (mas isInitialized já ficou true)
+      this.initPromise = null;
     }
   }
 
@@ -48,54 +74,84 @@ export class AIService {
     try {
       let answer: string;
       let relevantContacts: Contact[] = [];
+      let usedRAG = false;
 
-      if (this.openAIService && AI_CONFIG.USE_FALLBACK_WHEN_API_FAILS) {
+      // 🔥 1) RAG
+      let ragContacts: Contact[] = [];
+      try {
+        const ragResponse = await this.ragService.query(query, 5);
+
+        if (ragResponse && ragResponse.confidence >= 0.5) {
+          answer = ragResponse.answer;
+          usedRAG = true;
+
+          // Se o RAG devolveu contactos estruturados (ex: central telefónica)
+          if (ragResponse.contacts && ragResponse.contacts.length > 0) {
+            ragContacts = ragResponse.contacts.map((c) => ({
+              name: c.name,
+              phone: c.phone,
+              email: "",
+              department: c.department,
+            }));
+            console.log(`✅ AI: RAG com ${ragContacts.length} contacto(s)`);
+          } else {
+            console.log("✅ AI: a usar resposta RAG (texto)");
+          }
+        } else {
+          answer = "";
+          console.log("⚠️ AI: RAG sem resultado relevante, a usar fallback");
+        }
+      } catch {
+        answer = "";
+      }
+
+      // 🤖 2) OpenAI fallback
+      if (
+        !usedRAG &&
+        this.openAIService &&
+        AI_CONFIG.USE_FALLBACK_WHEN_API_FAILS
+      ) {
         try {
           answer = await this.openAIService.processQuery(
             query,
-            this.conversationHistory
+            this.conversationHistory,
           );
 
           this.conversationHistory.push(
             { role: "user", content: query },
-            { role: "assistant", content: answer }
+            { role: "assistant", content: answer },
           );
 
           if (this.conversationHistory.length > 20) {
             this.conversationHistory = this.conversationHistory.slice(-20);
           }
-        } catch (openAIError) {
+        } catch {
           answer = this.generateFallbackResponse(query);
         }
-      } else {
+      } else if (!usedRAG) {
         answer = this.generateFallbackResponse(query);
       }
 
       const keywords = this.extractKeywords(query);
       const realData = await this.realDataService.searchRealData(query);
 
-      // Verifica se a IA disse que não tem informação específica
       const hasNoSpecificInfo =
         answer.toLowerCase().includes("não tenho") ||
         answer.toLowerCase().includes("não tenho essa informação");
 
-      // Ajuste de âmbito institucional: DGADR é de âmbito nacional (não apenas Alentejo)
-      if (realData.isOutOfScope || hasNoSpecificInfo) {
-        // Verifica se é uma pergunta completamente irrelevante ou se tem encaminhamento
+      if (!usedRAG && (realData.isOutOfScope || hasNoSpecificInfo)) {
         const isCompletelyIrrelevant = this.isCompletelyIrrelevantQuery(query);
 
         if (isCompletelyIrrelevant) {
           answer =
             "Esta questão não se enquadra nas competências da DGADR. A DGADR atua em matérias de agricultura e desenvolvimento rural.";
-          relevantContacts = []; // Não fornece contactos para perguntas irrelevantes
+          relevantContacts = [];
         } else {
-          // Para questões fora de âmbito ou sem informação específica, encaminha para entidade competente
           relevantContacts =
             realData.externalContacts && realData.externalContacts.length > 0
               ? realData.externalContacts
               : this.getExternalRedirections(keywords);
 
-          // Identifica a entidade específica na resposta
           const entityName = this.getEntityNameFromContacts(relevantContacts);
 
           if (hasNoSpecificInfo) {
@@ -109,25 +165,29 @@ export class AIService {
           }
         }
       } else {
-        relevantContacts =
-          realData.contacts.length > 0
-            ? realData.contacts
-            : this.findRelevantContacts(keywords);
+        // Se o RAG forneceu contactos (ex: central telefónica), usá-los diretamente
+        if (ragContacts.length > 0) {
+          relevantContacts = ragContacts;
+        } else {
+          relevantContacts =
+            realData.contacts.length > 0
+              ? realData.contacts
+              : this.findRelevantContacts(keywords);
+        }
 
         if (realData.procedures.length > 0) {
           answer += "\n\n" + realData.procedures.join("\n\n");
         }
       }
 
-      // Otimização: apenas um contacto telefónico para segurança e performance
-      const optimizedContacts =
-        this.optimizeContactsForSecurity(relevantContacts);
-
       return {
         answer,
-        contacts: optimizedContacts,
+        // Se os contactos vêm do RAG (central telefónica), preservar como estão
+        contacts: ragContacts.length > 0
+          ? relevantContacts
+          : this.optimizeContactsForSecurity(relevantContacts),
       };
-    } catch (error) {
+    } catch {
       return {
         answer:
           "Exmo.(a) Senhor(a), ocorreu um erro ao processar a sua questão. Por favor, utilize os nossos contactos institucionais para apoio.",
@@ -454,15 +514,15 @@ export class AIService {
           return /recursos|solo|[ée]ros[aã]o|[aá]gua/.test(s);
         case "DOER":
           return /ordenamento|espa[cç]o rural|emparcelamento|estrutura[cç][aã]o/.test(
-            s
+            s,
           );
         case "DDAAFA":
           return /diversifica[cç][aã]o|forma[cç][aã]o|associativismo|produtores/.test(
-            s
+            s,
           );
         case "DIH":
           return /infraestruturas? hidr[aá]ulicas?|barragem|conduta|valas?/.test(
-            s
+            s,
           );
         case "DER":
           return /engenharia rural|caminhos|drenagem/.test(s);
@@ -478,14 +538,14 @@ export class AIService {
     }
 
     const relevant = contacts.filter((c) =>
-      keywords.some((kw) => matches(c, kw))
+      keywords.some((kw) => matches(c, kw)),
     );
 
     if (relevant.length === 0) {
       const general = contacts.find(
         (c) =>
           c.department.toLowerCase().includes("geral") ||
-          c.department.toLowerCase().includes("atendimento")
+          c.department.toLowerCase().includes("atendimento"),
       );
       return general ? [general] : this.getDefaultContacts();
     }
@@ -511,7 +571,7 @@ export class AIService {
 
     // Verifica se são contactos CCDR (precisam de mostrar todos)
     const areCCDRContacts = contacts.some((c) =>
-      c.name.toLowerCase().includes("ccdr")
+      c.name.toLowerCase().includes("ccdr"),
     );
 
     if (areCCDRContacts) {
@@ -625,7 +685,7 @@ export class AIService {
     if (
       keywords.includes("DGAV") ||
       /animal|veterinár|sanidade|doença|certificado|matadouro|segurança alimentar|capar|castrar|vacinar|bem-estar animal|porco|vaca|ovelha|cabra|galinha|suíno|bovino|ovino|caprino|avícola|cativeiro|manter.*animal/.test(
-        query
+        query,
       )
     ) {
       list.push({

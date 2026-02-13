@@ -4,7 +4,8 @@ const { getDefaultConfig } = require("@expo/metro-config");
 /** @type {import('expo/metro-config').MetroConfig} */
 const defaultConfig = getDefaultConfig(__dirname);
 
-defaultConfig.resolver.sourceExts.push("cjs");
+defaultConfig.resolver.sourceExts.push("cjs", "mjs");
+defaultConfig.resolver.assetExts.push("kb");
 
 // Configuração para suporte a UTF-8 e acentos portugueses
 defaultConfig.transformer = {
