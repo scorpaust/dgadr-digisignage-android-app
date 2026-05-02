@@ -1,0 +1,442 @@
+{
+  "type": "dgadr_contacts",
+  "version": "2026",
+  "source": "Central_telefonica_2026.pdf",
+  "divisionNames": {
+    "DORH": "Divisão de Organização e Recursos Humanos",
+    "DGRN": "Divisão de Gestão dos Recursos Naturais",
+    "DDAAFA": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+    "DQRG": "Divisão da Qualidade e Recursos Genéticos",
+    "DSTAR": "Direção de Serviços do Território e Agentes Rurais",
+    "DOER": "Divisão do Ordenamento de Espaço Rural",
+    "DER": "Divisão de Engenharia Rural",
+    "DIH": "Divisão de Infra-estruturas Hidráulicas",
+    "DIR": "Divisão do Regadio",
+    "DAEA": "Divisão de Apoio às Explorações Agrícolas",
+    "DSR": "Direção de Serviços do Regadio",
+    "DGF": "Divisão de Gestão Financeira",
+    "DPGI": "Divisão de Planeamento e Gestão da Informação"
+  },
+  "entries": [
+    {
+      "subjects": ["Expediente"],
+      "keywords": ["expediente", "correspondência", "documentos", "entradas", "saídas", "arquivo expediente"],
+      "division": "Divisão de Organização e Recursos Humanos",
+      "division_abbr": "DORH",
+      "phones": ["21 844 22 51", "21 844 22 56"]
+    },
+    {
+      "subjects": ["Águas Residuais, Qualidade da Água e bagaço de Azeitona"],
+      "keywords": ["águas residuais", "aguas residuais", "qualidade da água", "qualidade da agua", "bagaço de azeitona", "bagaco de azeitona", "efluentes", "tratamento de água", "nitratos água", "ETAR", "lagunagem"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 24 22", "21 844 24 14", "21 844 24 23"]
+    },
+    {
+      "subjects": ["Agrupamento De Produtores Multiprodutos / Associativismo Agrícola e Rural"],
+      "keywords": ["agrupamento de produtores", "agrupamentos produtores", "multiprodutos", "associativismo", "associativismo agrícola", "associativismo rural", "organizações de produtores", "associações agrícolas", "cooperativas", "agrupamento produtores", "OP multiprodutos"],
+      "division": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+      "division_abbr": "DDAAFA",
+      "phones": ["21 844 23 91", "21 844 23 96", "21 844 23 92"]
+    },
+    {
+      "subjects": ["Fertilizantes"],
+      "keywords": ["fertilizantes", "adubos", "adubo", "fertilizante", "nutrição vegetal", "fertilização", "corretivos", "estrume", "composto orgânico", "matéria orgânica", "azoto", "fósforo", "potássio"],
+      "division": "Divisão da Qualidade e Recursos Genéticos",
+      "division_abbr": "DQRG",
+      "phones": ["21 844 24 26"]
+    },
+    {
+      "subjects": ["Sementes e Material de Propagação Vegetativa"],
+      "keywords": ["sementes", "semente", "material de propagação", "propagação vegetativa", "estacas", "bolbos", "tubérculos", "material vegetal", "variedades", "cultivares", "registo variedades", "catálogo variedades"],
+      "division": "Divisão da Qualidade e Recursos Genéticos",
+      "division_abbr": "DQRG",
+      "phones": ["21 844 24 27"]
+    },
+    {
+      "subjects": ["Inovação / Bolsa de Iniciativas | Membros de Rede"],
+      "keywords": ["inovação", "inovacao", "bolsa de iniciativas", "membros de rede", "rede de inovação", "grupos operacionais", "EIP-AGRI", "parcerias inovação", "projetos inovação"],
+      "division": "Direção de Serviços do Território e Agentes Rurais",
+      "division_abbr": "DSTAR",
+      "phones": ["21 844 23 84", "21 844 23 86", "21 844 23 76"]
+    },
+    {
+      "subjects": ["AKIS"],
+      "keywords": ["AKIS", "sistema de conhecimento", "sistema de inovação agrícola", "serviços de aconselhamento", "agentes de conhecimento", "agricultural knowledge", "innovation system"],
+      "division": "Direção de Serviços do Território e Agentes Rurais",
+      "division_abbr": "DSTAR",
+      "phones": ["21 844 23 84", "21 844 23 86", "21 844 23 98"]
+    },
+    {
+      "subjects": ["Entidade Nacional da RAN"],
+      "keywords": ["RAN", "reserva agrícola nacional", "entidade nacional RAN", "solos agrícolas RAN", "aptidão agrícola", "classificação RAN", "exclusão RAN", "usos não agrícolas", "terrenos agrícolas"],
+      "division": "Divisão do Ordenamento de Espaço Rural",
+      "division_abbr": "DOER",
+      "phones": ["21 844 23 45"]
+    },
+    {
+      "subjects": ["Estudos de Impacte Ambiental / Avaliação de Impacte Ambiental / Aproveitamentos Hidroagrícolas"],
+      "keywords": ["impacte ambiental", "avaliação de impacte ambiental", "AIA", "EIA", "estudos impacte", "avaliação ambiental", "aproveitamentos hidroagrícolas AIA", "parecer ambiental"],
+      "division": "Divisão do Ordenamento de Espaço Rural",
+      "division_abbr": "DOER",
+      "phones": ["21 844 22 23", "21 844 24 50"]
+    },
+    {
+      "subjects": ["Pareceres a Projetos de Arborização e Rearborização"],
+      "keywords": ["arborização", "rearborização", "parecer arborização", "projetos arborização", "plantação árvores", "reconversão", "reflorestação", "arborização agrícola"],
+      "division": "Divisão do Ordenamento de Espaço Rural",
+      "division_abbr": "DOER",
+      "phones": ["21 844 23 37"]
+    },
+    {
+      "subjects": ["Alvará De Fruição Definitiva / Património da Ex-JCI / Baldios E Herdades Do Estado"],
+      "keywords": ["alvará", "alvará de fruição", "fruição definitiva", "JCI", "ex-JCI", "baldios", "herdades do estado", "terrenos estado", "baldios estado", "propriedade estado", "alvará fruição"],
+      "division": "Divisão do Ordenamento de Espaço Rural",
+      "division_abbr": "DOER",
+      "phones": ["21 844 23 35"]
+    },
+    {
+      "subjects": ["Animais Biológicos"],
+      "keywords": ["animais biológicos", "criação biológica", "pecuária biológica", "animais bio", "produção animal biológica", "gado biológico", "modo de produção biológico animais"],
+      "division": "Divisão da Qualidade e Recursos Genéticos",
+      "division_abbr": "DQRG",
+      "phones": ["21 844 24 52", "21 844 24 29"]
+    },
+    {
+      "subjects": ["Aposentações, Contagens de Tempo e Assiduidade"],
+      "keywords": ["aposentação", "aposentações", "contagem de tempo", "assiduidade", "reforma", "pensão", "tempo de serviço", "contagem tempo serviço", "faltas", "ausências"],
+      "division": "Divisão de Organização e Recursos Humanos",
+      "division_abbr": "DORH",
+      "phones": ["21 844 22 68", "21 844 22 32"]
+    },
+    {
+      "subjects": ["Segurança de Barragens"],
+      "keywords": ["segurança de barragens", "barragens", "barragem", "inspeção barragens", "segurança barragem", "regulamento segurança barragens", "RSB", "classificação barragens"],
+      "division": "Divisão de Engenharia Rural",
+      "division_abbr": "DER",
+      "phones": ["21 844 23 50", "21 844 23 56", "21 844 23 52"]
+    },
+    {
+      "subjects": ["Campanha de Rega"],
+      "keywords": ["campanha de rega", "campanha rega", "rega", "regadio", "água de rega", "abastecimento rega", "dotação de rega", "período de rega", "rega coletiva", "infraestrutura rega"],
+      "division": "Divisão de Engenharia Rural / Divisão de Infra-estruturas Hidráulicas / Divisão do Regadio",
+      "division_abbr": "DER / DIH / DIR",
+      "phones": ["21 844 23 50", "21 844 24 67", "21 844 24 51"]
+    },
+    {
+      "subjects": ["Aproveitamentos Hidroagrícolas (OBRA)"],
+      "keywords": ["aproveitamentos hidroagrícolas obra", "obra hidroagrícola", "construção hidroagrícola", "reabilitação hidroagrícola", "empreitadas", "obras regadio", "perímetro de rega obra"],
+      "division": "Divisão de Engenharia Rural",
+      "division_abbr": "DER",
+      "phones": ["21 844 23 50", "21 844 23 52"]
+    },
+    {
+      "subjects": ["Aproveitamentos Hidroagrícolas (EXPROPRIAÇÕES)"],
+      "keywords": ["expropriações", "expropriação", "indemnizações expropriação", "aproveitamentos hidroagrícolas expropriação", "aquisição terrenos", "terrenos hidroagrícolas"],
+      "division": "Divisão de Engenharia Rural",
+      "division_abbr": "DER",
+      "phones": ["21 844 23 50", "21 844 23 49"]
+    },
+    {
+      "subjects": ["Aproveitamentos Hidroagrícolas (INDEMNIZAÇÕES)"],
+      "keywords": ["indemnizações hidroagrícolas", "indemnização", "compensação aproveitamentos", "pagamento indemnizações regadio"],
+      "division": "Divisão de Engenharia Rural",
+      "division_abbr": "DER",
+      "phones": ["21 844 23 50", "21 844 23 52"]
+    },
+    {
+      "subjects": ["Aproveitamentos Hidroagrícolas (PROJETO)"],
+      "keywords": ["aproveitamentos hidroagrícolas projeto", "projeto hidroagrícola", "projeto regadio", "projeto infraestrutura hidráulica", "estudos hidroagrícolas", "planeamento regadio"],
+      "division": "Direção de Serviços do Regadio / Divisão de Infra-estruturas Hidráulicas",
+      "division_abbr": "DSR / DIH",
+      "phones": ["21 844 24 47", "21 844 24 42"]
+    },
+    {
+      "subjects": ["Benefício Fiscal ao Gasóleo ou Gasóleo Agrícola"],
+      "keywords": ["gasóleo agrícola", "gasoleo agricola", "benefício fiscal gasóleo", "isenção gasóleo", "gasóleo colorido", "gasóleo verde", "ISP combustíveis", "combustível agrícola", "reembolso gasóleo"],
+      "division": "Divisão de Apoio às Explorações Agrícolas",
+      "division_abbr": "DAEA",
+      "phones": ["21 844 24 76", "21 844 24 90"]
+    },
+    {
+      "subjects": ["Programa Emparcelar para Ordenar"],
+      "keywords": ["emparcelar para ordenar", "programa emparcelar", "emparcelamento", "ordenar", "emparcelamento rural", "reestruturação fundiária", "fragmentação parcelas"],
+      "division": "Divisão de Apoio às Explorações Agrícolas",
+      "division_abbr": "DAEA",
+      "phones": ["21 844 24 43", "21 844 24 78"]
+    },
+    {
+      "subjects": ["Matrículas de Tratores Usados (Ensaios)"],
+      "keywords": ["matrícula tratores", "matrícula tractores", "matrícula trator", "matrícula tractor", "tratores usados", "tractores usados", "ensaios tratores", "homologação usados", "matrícula máquinas agrícolas"],
+      "division": "Divisão de Apoio às Explorações Agrícolas",
+      "division_abbr": "DAEA",
+      "phones": ["21 844 24 73", "21 844 24 77"]
+    },
+    {
+      "subjects": ["Jovem Empresário Rural, Reconhecim. Técnicos Prod. Integrada, Proteção Integrada e MPB, Estatuto de Agricultura Familiar"],
+      "keywords": ["jovem empresário rural", "JER", "reconhecimento técnicos", "produção integrada", "proteção integrada", "MPB", "modo produção biológico", "estatuto agricultura familiar", "EAF", "agricultura familiar", "jovem agricultor", "técnicos reconhecidos"],
+      "division": "Divisão de Apoio às Explorações Agrícolas",
+      "division_abbr": "DAEA",
+      "phones": ["21 844 24 44", "21 844 24 54"]
+    },
+    {
+      "subjects": ["Homologação de Tratores Agrícolas, Mecanização Agrária"],
+      "keywords": ["homologação tratores", "homologação tractores", "homologação trator", "homologação tractor", "mecanização agrária", "tratores agrícolas", "tractores agrícolas", "máquinas agrícolas", "homologação máquinas", "equipamentos agrícolas homologação"],
+      "division": "Divisão de Apoio às Explorações Agrícolas",
+      "division_abbr": "DAEA",
+      "phones": ["21 844 24 73"]
+    },
+    {
+      "subjects": ["Solos / Parceria Portuguesa Para o Solo"],
+      "keywords": ["solos", "solo", "qualidade do solo", "parceria portuguesa para o solo", "conservação solos", "erosão solos", "saúde solo", "carbono solos", "gestão solos", "solos agrícolas"],
+      "division": "Divisão do Ordenamento de Espaço Rural",
+      "division_abbr": "DOER",
+      "phones": ["21 844 23 36"]
+    },
+    {
+      "subjects": ["Plataforma da Parceria Portuguesa Para o Solo"],
+      "keywords": ["plataforma solo", "parceria solo", "plataforma parceria solo", "SNISolos", "SNISOLOS", "informação solos plataforma"],
+      "division": "Direção de Serviços do Território e Agentes Rurais",
+      "division_abbr": "DSTAR",
+      "phones": ["21 844 23 76", "21 844 24 20"]
+    },
+    {
+      "subjects": ["Leader"],
+      "keywords": ["Leader", "LEADER", "desenvolvimento local", "GAL", "grupos de ação local", "abordagem LEADER", "desenvolvimento rural local", "estratégias desenvolvimento local"],
+      "division": "Direção de Serviços do Território e Agentes Rurais",
+      "division_abbr": "DSTAR",
+      "phones": ["21 844 23 76", "21 844 23 86", "21 844 24 20"]
+    },
+    {
+      "subjects": ["Circuitos Curtos de Comercialização / Alimentação Sustentável / Dieta Mediterrânica"],
+      "keywords": ["circuitos curtos", "comercialização local", "alimentação sustentável", "dieta mediterrânica", "dieta mediterrânea", "venda direta", "mercados locais", "produtos locais", "cadeia curta", "venda local"],
+      "division": "Direção de Serviços do Território e Agentes Rurais",
+      "division_abbr": "DSTAR",
+      "phones": ["21 844 23 86", "21 844 24 20", "21 844 23 76"]
+    },
+    {
+      "subjects": ["Declarações de Tempo/Serviço/Vínculo"],
+      "keywords": ["declaração tempo serviço", "declaração vínculo", "declaração serviço", "certidão serviço", "certificado emprego", "declaração contrato"],
+      "division": "Divisão de Organização e Recursos Humanos",
+      "division_abbr": "DORH",
+      "phones": ["21 844 22 32", "21 844 22 84"]
+    },
+    {
+      "subjects": ["SIADAP"],
+      "keywords": ["SIADAP", "avaliação desempenho", "sistema integrado avaliação", "avaliação trabalhadores"],
+      "division": "Divisão de Organização e Recursos Humanos",
+      "division_abbr": "DORH",
+      "phones": ["21 844 22 52"]
+    },
+    {
+      "subjects": ["Mobilidades"],
+      "keywords": ["mobilidade", "mobilidades", "transferência", "cedência de interesse público", "destacamento", "requisição", "mobilidade interna"],
+      "division": "Divisão de Organização e Recursos Humanos",
+      "division_abbr": "DORH",
+      "phones": ["21 844 22 55", "21 844 22 58"]
+    },
+    {
+      "subjects": ["Concursos de Pessoal"],
+      "keywords": ["recursos humanos", "RH", "concurso", "concursos", "recrutamento", "seleção pessoal", "vagas", "abertura concurso", "candidatura concurso", "concurso público", "emprego DGADR", "trabalhar DGADR", "trabalhador", "admissão", "admissões", "entrada pessoal", "lugar vago", "bolsa recrutamento", "pessoal DGADR"],
+      "division": "Divisão de Organização e Recursos Humanos",
+      "division_abbr": "DORH",
+      "phones": ["21 844 22 67", "21 844 22 58", "21 844 22 55"]
+    },
+    {
+      "subjects": ["Contabilidade"],
+      "keywords": ["contabilidade", "balancete", "demonstrações financeiras", "prestação de contas"],
+      "division": "Divisão de Gestão Financeira",
+      "division_abbr": "DGF",
+      "phones": ["22 844 22 69", "21 844 22 81"]
+    },
+    {
+      "subjects": ["Área Financeira"],
+      "keywords": ["área financeira", "finanças", "orçamento", "execução orçamental", "dotações", "cabimentos", "compromissos", "pagamentos financeiros"],
+      "division": "Divisão de Gestão Financeira",
+      "division_abbr": "DGF",
+      "phones": ["21 844 22 94", "21 844 22 89", "21 844 22 66"]
+    },
+    {
+      "subjects": ["Projetos da Rede Rural PAC / Site da Rede Rural"],
+      "keywords": ["rede rural", "rede rural nacional", "PAC rede rural", "site rede rural", "projetos rede rural", "rededrural"],
+      "division": "Direção de Serviços do Território e Agentes Rurais",
+      "division_abbr": "DSTAR",
+      "phones": ["21 844 23 84", "21 844 23 98"]
+    },
+    {
+      "subjects": ["Pareceres ao abrigo do RJOAH"],
+      "keywords": ["RJOAH", "ordenamento agrário", "pareceres ordenamento", "regime jurídico obras", "obras agrícolas", "parecer RJOAH"],
+      "division": "Divisão do Ordenamento de Espaço Rural",
+      "division_abbr": "DOER",
+      "phones": ["21 844 23 20", "21 844 24 50"]
+    },
+    {
+      "subjects": ["Tesouraria"],
+      "keywords": ["tesouraria", "pagamentos", "recebimentos", "caixa", "cheques", "transferências"],
+      "division": "Divisão de Gestão Financeira",
+      "division_abbr": "DGF",
+      "phones": ["21 844 23 05", "21 844 22 85", "21 844 22 86"]
+    },
+    {
+      "subjects": ["Faturação"],
+      "keywords": ["faturação", "fatura", "faturas", "cobranças", "devedores", "notas débito", "recibos"],
+      "division": "Divisão de Gestão Financeira",
+      "division_abbr": "DGF",
+      "phones": ["21 844 23 03", "21 844 22 60"]
+    },
+    {
+      "subjects": ["Património, aprovisionamento e viaturas"],
+      "keywords": ["património", "aprovisionamento", "viaturas", "inventário", "bens móveis", "imóveis", "compras", "aquisições", "concursos compras", "ajuste direto", "frota"],
+      "division": "Divisão de Gestão Financeira",
+      "division_abbr": "DGF",
+      "phones": ["21 844 23 01", "21 844 22 90", "21 844 23 02", "21 844 22 99", "21 844 22 87"]
+    },
+    {
+      "subjects": ["Dados Estatísticos (Bio), Produção Biológica, TRACES - Cadastro"],
+      "keywords": ["dados estatísticos biológicos", "estatísticas bio", "produção biológica cadastro", "TRACES", "cadastro biológico", "operadores biológicos", "registo biológicos"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 23 81"]
+    },
+    {
+      "subjects": ["Resíduos"],
+      "keywords": ["resíduos", "resíduos agrícolas", "gestão resíduos", "reciclagem", "valorização resíduos", "tratamento resíduos", "RGGR", "código LER"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 23 85", "21 844 24 22"]
+    },
+    {
+      "subjects": ["Técnicos Reconhecidos de Lamas, Valorização Agrícola de Lamas"],
+      "keywords": ["lamas", "lamas ETAR", "valorização agrícola lamas", "técnicos lamas", "aplicação lamas", "lamas esgotos", "biossólidos"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 23 85", "21 844 24 22", "21 844 24 23"]
+    },
+    {
+      "subjects": ["Economia Circular, Efluentes Pecuários, ENEAPAI, NREAP - Licenciamento Pecuário, Energias Renováveis - Produção de Biogás/Biometano"],
+      "keywords": ["economia circular", "efluentes pecuários", "chorume", "dejetos animais", "ENEAPAI", "NREAP", "licenciamento pecuário", "biogás", "biometano", "digestão anaeróbia", "energias renováveis pecuária", "nitrogénio pecuária"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 24 15", "21 844 24 23"]
+    },
+    {
+      "subjects": ["PEPAC - Bem Estar Animal; Melhoria da Eficiência Alimentar, Pastagens Biodiversas"],
+      "keywords": ["PEPAC bem estar animal", "bem estar animal PEPAC", "eficiência alimentar", "pastagens biodiversas", "pastagens PEPAC", "intervenção PEPAC", "condicionantes PEPAC", "melhoria eficiência alimentar", "bem estar gado"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 23 85", "21 844 24 25", "21 844 24 12"]
+    },
+    {
+      "subjects": ["Diretiva Nitratos, Promoção da Fertilização Orgânica"],
+      "keywords": ["diretiva nitratos", "nitratos", "programa ação nitratos", "zonas vulneráveis", "fertilização orgânica", "promoção fertilização orgânica", "azoto nitratos", "código boas práticas agrícolas"],
+      "division": "Divisão de Gestão dos Recursos Naturais",
+      "division_abbr": "DGRN",
+      "phones": ["21 844 24 14", "21 844 24 23"]
+    },
+    {
+      "subjects": ["Apoios no âmbito do Bio, Notificação da Atividade Produção Biológica, Pedidos de Retroatividade (Bio), Importação de Produtos Biológicos"],
+      "keywords": ["produção biológica notificação", "notificação bio", "retroatividade biológico", "importação biológicos", "certificação biológica", "operadores biológicos", "modo biológico", "notificação atividade biológica", "importação produtos biológicos", "pedido retroatividade bio"],
+      "division": "Divisão da Qualidade e Recursos Genéticos",
+      "division_abbr": "DQRG",
+      "phones": ["21 844 24 21", "21 844 24 26", "21 844 24 11"]
+    },
+    {
+      "subjects": ["Apoios no âmbito do Prodi, de Produção Integrada (Prodi) e Indicações Geográficas: DOP/IGP/ETG"],
+      "keywords": ["produção integrada", "PRODI", "DOP", "denominação origem protegida", "IGP", "indicação geográfica protegida", "ETG", "especialidade tradicional garantida", "indicações geográficas", "certificação qualidade", "registo DOP", "registo IGP", "reconhecimento produção integrada"],
+      "division": "Divisão da Qualidade e Recursos Genéticos",
+      "division_abbr": "DQRG",
+      "phones": ["21 844 23 93", "21 844 24 32"]
+    },
+    {
+      "subjects": ["Arrendamento Rural, Estruturação Fundiária, Fracionamento, Emparcelamento Simples"],
+      "keywords": ["arrendamento rural", "arrendamento agrícola", "estruturação fundiária", "fracionamento", "emparcelamento simples", "contratos arrendamento", "parcelas agrícolas", "emparcelamento rural"],
+      "division": "Divisão de Apoio às Explorações Agrícolas",
+      "division_abbr": "DAEA",
+      "phones": ["21 844 24 78", "21 844 24 54"]
+    },
+    {
+      "subjects": ["Intervenção - Uso Eficiente da Água / Sistema de Reconhecimento de Regantes"],
+      "keywords": ["uso eficiente da água", "eficiência hídrica", "reconhecimento de regantes", "sistema regantes", "poupança água", "uso eficiente água regadio", "SRR"],
+      "division": "Direção de Serviços do Regadio / Divisão de Infra-estruturas Hidráulicas",
+      "division_abbr": "DSR / DIH",
+      "phones": ["21 844 24 47", "21 844 24 67", "21 844 24 86", "21 844 24 42"]
+    },
+    {
+      "subjects": ["SAAF - Serviço de Aconselhamento Agrícola e Florestal"],
+      "keywords": ["SAAF", "serviço aconselhamento agrícola", "aconselhamento agrícola", "aconselhamento florestal", "assessoria agrícola", "serviço consultivo", "conselheiros agrícolas"],
+      "division": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+      "division_abbr": "DDAAFA",
+      "phones": ["21 844 23 96", "21 844 23 91"]
+    },
+    {
+      "subjects": ["Artesanato / Turismo No Espaço Rural / Empreendedorismo em Meio Rural"],
+      "keywords": ["artesanato", "turismo no espaço rural", "turismo rural", "empreendedorismo rural", "alojamento rural", "atividades rurais", "diversificação rendimentos", "turismo espaço rural", "TER"],
+      "division": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+      "division_abbr": "DDAAFA",
+      "phones": ["21 844 23 83", "21 844 23 96"]
+    },
+    {
+      "subjects": ["Formação Profissional"],
+      "keywords": ["formação", "formação profissional", "cursos formação", "formação agrícola", "formação rural", "ações formação", "formandos", "EFA", "centro formação", "curso agrícola", "cursos agrícolas", "aprendizagem agrícola", "operador agrícola", "formação tratores", "formação tractores"],
+      "division": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+      "division_abbr": "DDAAFA",
+      "phones": ["21 844 23 96", "21 844 23 91", "21 844 23 83", "21 844 23 92"]
+    },
+    {
+      "subjects": ["Programa Operacional Da Apicultura (PNASA)"],
+      "keywords": ["apicultura", "PNASA", "programa apicultura", "apiário", "mel", "abelhas", "colmeias", "apicultores", "programa nacional apicultura"],
+      "division": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+      "division_abbr": "DDAAFA",
+      "phones": ["21 844 23 95"]
+    },
+    {
+      "subjects": ["Programa Operacional Das Frutas & Hortícolas"],
+      "keywords": ["frutas", "hortícolas", "programa operacional frutas", "frutas hortícolas", "organizações produtores frutas", "OP hortofruticolas", "hortofrutícolas", "legumes", "frutas frescas"],
+      "division": "Divisão da Diversificação da Atividade Agrícola, Formação e Associativismo",
+      "division_abbr": "DDAAFA",
+      "phones": ["21 844 24 13", "21 844 23 97", "21 844 23 95", "21 844 23 75"]
+    },
+    {
+      "subjects": ["Projetos"],
+      "keywords": ["projetos financeiros", "candidatura projetos", "financiamento projetos", "projetos cofinanciados", "projetos DGF"],
+      "division": "Divisão de Gestão Financeira",
+      "division_abbr": "DGF",
+      "phones": ["21 844 22 98", "21 844 22 41", "21 844 22 83", "21 844 23 04"]
+    },
+    {
+      "subjects": ["Desenvolvimento Aplicacional e Infraestruturas da DGADR"],
+      "keywords": ["desenvolvimento aplicacional", "sistemas informáticos DGADR", "infraestruturas TI", "aplicações informáticas", "suporte técnico", "plataformas digitais DGADR"],
+      "division": "Divisão de Planeamento e Gestão da Informação",
+      "division_abbr": "DPGI",
+      "phones": ["21 844 22 19"]
+    },
+    {
+      "subjects": ["Instrumentos de Gestão da DGADR"],
+      "keywords": ["instrumentos gestão", "QUAR", "plano atividades", "relatório atividades", "indicadores", "monitorização", "avaliação DGADR"],
+      "division": "Divisão de Planeamento e Gestão da Informação",
+      "division_abbr": "DPGI",
+      "phones": ["21 844 22 65", "21 844 22 19"]
+    },
+    {
+      "subjects": ["Canal de Denúncia"],
+      "keywords": ["canal de denúncia", "denúncia", "whistleblower", "irregularidades", "reportar irregularidade", "canal denúncia interno"],
+      "division": "Divisão de Planeamento e Gestão da Informação",
+      "division_abbr": "DPGI",
+      "phones": ["21 844 22 24", "21 844 22 19"]
+    },
+    {
+      "subjects": ["Biblioteca e Arquivo"],
+      "keywords": ["biblioteca", "arquivo", "documentação", "publicações", "monografias", "revistas", "arquivo histórico", "pesquisa documental"],
+      "division": "Divisão de Planeamento e Gestão da Informação",
+      "division_abbr": "DPGI",
+      "phones": ["21 844 22 25", "21 844 22 42"]
+    },
+    {
+      "subjects": ["Site Institucional e Pedidos de Informação Via Site"],
+      "keywords": ["site institucional", "website", "pedido informação", "pedidos informação", "formulário site", "contacto site", "informação DGADR", "perguntas gerais"],
+      "division": "Divisão de Planeamento e Gestão da Informação",
+      "division_abbr": "DPGI",
+      "phones": ["21 844 22 65", "21 844 22 24"]
+    }
+  ]
+}

@@ -419,8 +419,9 @@ const MessageItem = memo(({ item, onPhonePress }: MessageItemProps) => {
               (contact, index) =>
                 contact.phone && (
                   <View key={index} style={styles.contactItem}>
-                    {(contacts.length > 1 ||
-                      (contact.name && contact.name !== "DGADR")) && (
+                    {contact.name &&
+                      contact.name.trim() !== "" &&
+                      contact.name !== "DGADR" && (
                       <Text style={styles.contactRegion}>
                         {contact.name}
                         {contact.department ? ` - ${contact.department}` : ""}

@@ -1,17 +1,23 @@
 import { Contact, AIResponse } from "../types/chat";
-import { OpenAIService } from "./OpenAIService";
+import { GeminiService } from "./GeminiService";
 import { RAGService } from "./RAGService";
 import { ExcelService } from "./ExcelService";
 import { KnowledgeBaseService } from "./KnowledgeBaseService";
 import { RealDataService } from "./RealDataService";
 import { AI_CONFIG, validateAIConfig } from "../config/ai";
+import {
+  ContactLookupService,
+  DgadrLookupResult,
+  ExternalLookupResult,
+} from "./ContactLookupService";
 
 export class AIService {
-  private openAIService: OpenAIService | null = null;
+  private geminiService: GeminiService | null = null;
   private ragService: RAGService;
   private excelService: ExcelService;
   private knowledgeService: KnowledgeBaseService;
   private realDataService: RealDataService;
+  private contactLookupService: ContactLookupService;
 
   private conversationHistory: Array<{
     role: "user" | "assistant";
@@ -26,9 +32,7 @@ export class AIService {
     this.excelService = ExcelService.getInstance();
     this.knowledgeService = KnowledgeBaseService.getInstance();
     this.realDataService = RealDataService.getInstance();
-
-    // ❌ NÃO auto-inicializar aqui.
-    // A inicialização passa a ser lazy e com lock em processQuery().
+    this.contactLookupService = ContactLookupService.getInstance();
   }
 
   private async initializeServices(): Promise<void> {
@@ -41,15 +45,16 @@ export class AIService {
 
       // Faz init "à prova de falhas": uma coisa pode falhar sem rebentar tudo.
       const results = await Promise.allSettled([
+        this.contactLookupService.load(),
         this.ragService.loadKnowledgeBase(),
         this.knowledgeService.loadKnowledgeBase(),
         this.excelService.loadContacts(),
         this.realDataService.loadRealData(),
       ]);
 
-      // OpenAI é opcional
+      // Gemini é opcional
       if (validateAIConfig()) {
-        this.openAIService = new OpenAIService(AI_CONFIG.OPENAI_API_KEY);
+        this.geminiService = new GeminiService(AI_CONFIG.GEMINI_API_KEY);
       }
 
       // Se quiseres, podes logar as falhas em dev:
@@ -72,121 +77,93 @@ export class AIService {
     await this.initializeServices();
 
     try {
-      let answer: string;
-      let relevantContacts: Contact[] = [];
-      let usedRAG = false;
+      // ── Passo 0: rejeitar temas completamente fora de âmbito ─────────────
+      if (this.isCompletelyIrrelevantQuery(query)) {
+        return {
+          answer:
+            "Esta questão não se enquadra nas competências da DGADR. A DGADR atua em matérias de agricultura e desenvolvimento rural.",
+          contacts: [],
+        };
+      }
 
-      // 🔥 1) RAG
+      // ── Passo 0b: perguntas sobre pessoas / organograma ───────────────────
+      if (this.isPersonnelQuery(query)) {
+        return {
+          answer:
+            "Para informação sobre a estrutura orgânica e dirigentes da DGADR, consulte o portal institucional em www.dgadr.gov.pt.",
+          contacts: [],
+        };
+      }
+
+      // ── Passo 1: lookup estruturado (central telefónica + entidades externas)
+      const lookupResult = await this.contactLookupService.lookup(query);
+
+      if (lookupResult?.type === "dgadr") {
+        return this.buildDgadrResponse(lookupResult as DgadrLookupResult);
+      }
+
+      if (lookupResult?.type === "external") {
+        return this.buildExternalResponse(lookupResult as ExternalLookupResult);
+      }
+
+      // ── Passo 2: RAG (knowledge base com embeddings / pesquisa local) ─────
+      let answer = "";
       let ragContacts: Contact[] = [];
+
       try {
         const ragResponse = await this.ragService.query(query, 5);
-
         if (ragResponse && ragResponse.confidence >= 0.5) {
           answer = ragResponse.answer;
-          usedRAG = true;
-
-          // Se o RAG devolveu contactos estruturados (ex: central telefónica)
-          if (ragResponse.contacts && ragResponse.contacts.length > 0) {
+          if (ragResponse.contacts?.length) {
             ragContacts = ragResponse.contacts.map((c) => ({
               name: c.name,
               phone: c.phone,
               email: "",
               department: c.department,
             }));
-            console.log(`✅ AI: RAG com ${ragContacts.length} contacto(s)`);
-          } else {
-            console.log("✅ AI: a usar resposta RAG (texto)");
           }
-        } else {
-          answer = "";
-          console.log("⚠️ AI: RAG sem resultado relevante, a usar fallback");
         }
       } catch {
-        answer = "";
+        // RAG falhou, continua para fallbacks
       }
 
-      // 🤖 2) OpenAI fallback
-      if (
-        !usedRAG &&
-        this.openAIService &&
-        AI_CONFIG.USE_FALLBACK_WHEN_API_FAILS
-      ) {
+      // ── Passo 3: Gemini fallback ──────────────────────────────────────────
+      if (!answer && this.geminiService && AI_CONFIG.USE_FALLBACK_WHEN_API_FAILS) {
         try {
-          answer = await this.openAIService.processQuery(
+          answer = await this.geminiService.processQuery(
             query,
             this.conversationHistory,
           );
-
           this.conversationHistory.push(
             { role: "user", content: query },
             { role: "assistant", content: answer },
           );
-
           if (this.conversationHistory.length > 20) {
             this.conversationHistory = this.conversationHistory.slice(-20);
           }
         } catch {
           answer = this.generateFallbackResponse(query);
         }
-      } else if (!usedRAG) {
+      } else if (!answer) {
         answer = this.generateFallbackResponse(query);
       }
 
+      // ── Passo 4: complementar com realDataService ─────────────────────────
       const keywords = this.extractKeywords(query);
       const realData = await this.realDataService.searchRealData(query);
 
-      const hasNoSpecificInfo =
-        answer.toLowerCase().includes("não tenho") ||
-        answer.toLowerCase().includes("não tenho essa informação");
-
-      if (!usedRAG && (realData.isOutOfScope || hasNoSpecificInfo)) {
-        const isCompletelyIrrelevant = this.isCompletelyIrrelevantQuery(query);
-
-        if (isCompletelyIrrelevant) {
-          answer =
-            "Esta questão não se enquadra nas competências da DGADR. A DGADR atua em matérias de agricultura e desenvolvimento rural.";
-          relevantContacts = [];
-        } else {
-          relevantContacts =
-            realData.externalContacts && realData.externalContacts.length > 0
-              ? realData.externalContacts
-              : this.getExternalRedirections(keywords);
-
-          const entityName = this.getEntityNameFromContacts(relevantContacts);
-
-          if (hasNoSpecificInfo) {
-            answer = entityName
-              ? `Não tenho informação específica sobre este assunto. Para esta questão, sugerimos o contacto com a ${entityName}.`
-              : "Não tenho informação específica sobre este assunto. Para esta questão, sugerimos o contacto com a entidade competente.";
-          } else {
-            answer = entityName
-              ? `Exmo.(a) Senhor(a), a questão apresentada não se enquadra nas competências da DGADR. Para a sua questão, sugerimos o contacto com a ${entityName}.`
-              : "Exmo.(a) Senhor(a), a questão apresentada não se enquadra nas competências da DGADR. Para a sua questão, sugerimos o contacto com a entidade competente.";
-          }
-        }
-      } else {
-        // Se o RAG forneceu contactos (ex: central telefónica), usá-los diretamente
-        if (ragContacts.length > 0) {
-          relevantContacts = ragContacts;
-        } else {
-          relevantContacts =
-            realData.contacts.length > 0
-              ? realData.contacts
-              : this.findRelevantContacts(keywords);
-        }
-
-        if (realData.procedures.length > 0) {
-          answer += "\n\n" + realData.procedures.join("\n\n");
-        }
+      if (realData.procedures.length > 0) {
+        answer += "\n\n" + realData.procedures.join("\n\n");
       }
 
-      return {
-        answer,
-        // Se os contactos vêm do RAG (central telefónica), preservar como estão
-        contacts: ragContacts.length > 0
-          ? relevantContacts
-          : this.optimizeContactsForSecurity(relevantContacts),
-      };
+      const rawContacts: Contact[] =
+        ragContacts.length > 0
+          ? ragContacts
+          : realData.contacts.length > 0
+            ? realData.contacts
+            : this.findRelevantContacts(keywords);
+
+      return { answer, contacts: this.sanitizeContacts(rawContacts) };
     } catch {
       return {
         answer:
@@ -194,6 +171,19 @@ export class AIService {
         contacts: this.getDefaultContacts(),
       };
     }
+  }
+
+  // ── Response builders ───────────────────────────────────────────────────────
+
+  private buildDgadrResponse(result: DgadrLookupResult): AIResponse {
+    const answer = this.contactLookupService.formatDgadrAnswer(result);
+    return { answer, contacts: result.contacts };
+  }
+
+  private buildExternalResponse(result: ExternalLookupResult): AIResponse {
+    const answer = this.contactLookupService.formatExternalAnswer(result);
+    const contacts = this.contactLookupService.externalToContacts(result);
+    return { answer, contacts };
   }
 
   /**
@@ -739,6 +729,41 @@ export class AIService {
         department: "Informação e Encaminhamento",
       },
     ];
+  }
+
+  /**
+   * Returns true if the query is asking about DGADR staff, directors, or org chart.
+   * These questions must never be answered with personal names.
+   */
+  private isPersonnelQuery(query: string): boolean {
+    const q = query.toLowerCase();
+    return [
+      "diretor-geral", "diretora-geral", "diretor geral", "diretora geral",
+      "presidente da dgadr", "quem chefia", "quem dirige",
+      "como se chama o diretor", "como se chama a diretora",
+      "nome do diretor", "nome da diretora",
+      "organograma",
+    ].some((k) => q.includes(k));
+  }
+
+  /**
+   * Removes personal names from contacts before they reach the UI.
+   * Replaces any contact whose name looks like a person (contains salutation
+   * or a "FirstName Surname" pattern) with just the department / "DGADR".
+   */
+  private sanitizeContacts(contacts: Contact[]): Contact[] {
+    const salutationRe = /^(dr\.?[aº]?|eng\.?[aº]?|prof\.?|dra\.?)\s/i;
+    const fullNameRe = /^[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ][a-záàâãéèêíìîóòôõúùûç]+ [A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]/;
+
+    return contacts.map((c) => {
+      const isPersonName = salutationRe.test(c.name) || fullNameRe.test(c.name);
+      if (!isPersonName) return c;
+      return {
+        ...c,
+        name: c.department || "DGADR",
+        email: "",
+      };
+    });
   }
 
   public clearConversationHistory(): void {
