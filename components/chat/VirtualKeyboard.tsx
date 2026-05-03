@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const { width: screenWidth } = Dimensions.get("window");
+const windowWidth = Dimensions.get("window").width;
+const sf = windowWidth / 320; // mesma escala do resto da app
+const keyW = Math.floor((windowWidth - 20 * sf) / 10) - 4 * sf;
 
 interface VirtualKeyboardProps {
   onKeyPress: (key: string) => void;
@@ -26,207 +28,219 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   onHide,
   visible,
 }) => {
+  const [isUpperCase, setIsUpperCase] = useState(false);
+
   if (!visible) return null;
 
-  // Layout do teclado português
-  const keyboardRows = [
-    // Números e símbolos
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-    // Primeira linha de letras
-    ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-    // Segunda linha de letras
-    ["a", "s", "d", "f", "g", "h", "j", "k", "l", "ç"],
-    // Terceira linha de letras
-    ["z", "x", "c", "v", "b", "n", "m"],
-  ];
+  const toCase = (k: string) => (isUpperCase ? k.toUpperCase() : k);
 
-  // Caracteres especiais portugueses
-  const specialChars = [
-    "á",
-    "à",
-    "â",
-    "ã",
-    "é",
-    "ê",
-    "í",
-    "ó",
-    "ô",
-    "õ",
-    "ú",
-    "ü",
-  ];
+  const accentLower = ["á", "à", "â", "ã", "é", "ê", "í", "ó", "ô", "õ", "ú", "ü"];
+  const accentUpper = ["Á", "À", "Â", "Ã", "É", "Ê", "Í", "Ó", "Ô", "Õ", "Ú", "Ü"];
+  const accents = isUpperCase ? accentUpper : accentLower;
 
-  // Pontuação comum
-  const punctuation = [".", ",", "?", "!", ";", ":", "-", "(", ")", '"', "'"];
+  const row1 = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+  const row2 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"];
+  const row3 = ["a", "s", "d", "f", "g", "h", "j", "k", "l", "ç"];
+  const row4 = ["z", "x", "c", "v", "b", "n", "m"];
+  const punctuation = [".", ",", "?", "!", ";", ":", "-", "(", ")", '"'];
 
-  const renderKey = (key: string, isSpecial = false) => (
+  const renderKey = (key: string, extraStyle?: object, extraTextStyle?: object) => (
     <TouchableOpacity
       key={key}
-      style={[styles.key, isSpecial && styles.specialKey]}
+      style={[styles.key, extraStyle]}
       onPress={() => onKeyPress(key)}
     >
-      <Text style={[styles.keyText, isSpecial && styles.specialKeyText]}>
-        {key}
-      </Text>
+      <Text style={[styles.keyText, extraTextStyle]}>{key}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      {/* Barra superior com botão fechar */}
+      {/* Barra superior */}
       <View style={styles.topBar}>
-        <Text style={styles.title}>Teclado Português</Text>
+        <Text style={styles.title}>Teclado PT</Text>
         <TouchableOpacity onPress={onHide} style={styles.closeButton}>
-          <Ionicons name="close" size={24} color="#666" />
+          <Ionicons name="close" size={22 * sf} color="#666" />
         </TouchableOpacity>
       </View>
 
+      {/* Acentos — sempre visíveis, scroll horizontal */}
       <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.accentScroll}
+        contentContainerStyle={styles.accentContent}
       >
-        {/* Teclado principal */}
-        <View style={styles.keyboard}>
-          {keyboardRows.map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.row}>
-              {row.map((key) => renderKey(key))}
-            </View>
-          ))}
-
-          {/* Linha com espaço e backspace */}
-          <View style={styles.row}>
-            <TouchableOpacity style={styles.backspaceKey} onPress={onBackspace}>
-              <Ionicons name="backspace" size={20} color="#333" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.spaceKey} onPress={onSpace}>
-              <Text style={styles.keyText}>espaço</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Caracteres especiais portugueses */}
-        <View style={styles.specialSection}>
-          <Text style={styles.sectionTitle}>Acentos Portugueses</Text>
-          <View style={styles.specialRow}>
-            {specialChars.map((char) => renderKey(char, true))}
-          </View>
-        </View>
-
-        {/* Pontuação */}
-        <View style={styles.specialSection}>
-          <Text style={styles.sectionTitle}>Pontuação</Text>
-          <View style={styles.specialRow}>
-            {punctuation.map((char) => renderKey(char, true))}
-          </View>
-        </View>
+        {accents.map((char) => renderKey(char, styles.accentKey, styles.accentKeyText))}
       </ScrollView>
+
+      <View style={styles.keyboard}>
+        {/* Números */}
+        <View style={styles.row}>
+          {row1.map((k) => renderKey(k))}
+        </View>
+
+        {/* QWERTY */}
+        <View style={styles.row}>
+          {row2.map((k) => renderKey(toCase(k)))}
+        </View>
+
+        {/* ASDF */}
+        <View style={styles.row}>
+          {row3.map((k) => renderKey(toCase(k)))}
+        </View>
+
+        {/* Shift + ZXCVBNM + Backspace */}
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={[styles.shiftKey, isUpperCase && styles.shiftKeyActive]}
+            onPress={() => setIsUpperCase(!isUpperCase)}
+          >
+            <Ionicons name="arrow-up" size={18 * sf} color={isUpperCase ? "#fff" : "#555"} />
+          </TouchableOpacity>
+          {row4.map((k) => renderKey(toCase(k)))}
+          <TouchableOpacity style={styles.backspaceKey} onPress={onBackspace}>
+            <Ionicons name="backspace-outline" size={18 * sf} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Pontuação + Espaço */}
+        <View style={styles.row}>
+          {punctuation.map((char) => renderKey(char, styles.punctKey))}
+          <TouchableOpacity style={styles.spaceKey} onPress={onSpace}>
+            <Text style={styles.spaceText}>espaço</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f8f8f8",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    maxHeight: 300,
+    backgroundColor: "#f0f0f0",
+    borderTopWidth: 1 * sf,
+    borderTopColor: "#ccc",
   },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 12,
-    backgroundColor: "#fff",
+    paddingHorizontal: 12 * sf,
+    paddingVertical: 6 * sf,
+    backgroundColor: "#e8e8e8",
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
   },
   title: {
-    fontSize: 16,
+    fontSize: 13 * sf,
     fontWeight: "600",
-    color: "#333",
+    color: "#555",
   },
   closeButton: {
-    padding: 4,
+    padding: 4 * sf,
   },
-  scrollContainer: {
-    flex: 1,
+  accentScroll: {
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  accentContent: {
+    flexDirection: "row",
+    paddingHorizontal: 8 * sf,
+    paddingVertical: 6 * sf,
+    alignItems: "center",
+  },
+  accentKey: {
+    backgroundColor: "#7eda3b",
+    borderRadius: 6 * sf,
+    paddingVertical: 8 * sf,
+    paddingHorizontal: 12 * sf,
+    marginHorizontal: 3 * sf,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 38 * sf,
+  },
+  accentKeyText: {
+    fontSize: 16 * sf,
+    color: "#fff",
+    fontWeight: "600",
   },
   keyboard: {
-    padding: 8,
+    paddingHorizontal: 8 * sf,
+    paddingVertical: 6 * sf,
   },
   row: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 6,
+    marginBottom: 4 * sf,
   },
   key: {
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginHorizontal: 2,
-    minWidth: 32,
+    borderColor: "#ccc",
+    borderRadius: 5 * sf,
+    paddingVertical: 10 * sf,
+    width: keyW,
+    marginHorizontal: 2 * sf,
     alignItems: "center",
     justifyContent: "center",
+    elevation: 1,
   },
   keyText: {
-    fontSize: 16,
+    fontSize: 15 * sf,
     color: "#333",
     fontWeight: "500",
   },
-  specialSection: {
-    padding: 12,
-    backgroundColor: "#fff",
-    marginTop: 8,
-    marginHorizontal: 8,
-    borderRadius: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  specialRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  shiftKey: {
+    backgroundColor: "#e0e0e0",
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 5 * sf,
+    paddingVertical: 10 * sf,
+    paddingHorizontal: 12 * sf,
+    marginHorizontal: 2 * sf,
+    alignItems: "center",
     justifyContent: "center",
+    minWidth: 42 * sf,
+    elevation: 1,
   },
-  specialKey: {
-    backgroundColor: "#7eda3b",
-    borderColor: "#7eda3b",
-    marginHorizontal: 3,
-    marginVertical: 2,
-  },
-  specialKeyText: {
-    color: "#fff",
-    fontWeight: "600",
+  shiftKeyActive: {
+    backgroundColor: "#555",
+    borderColor: "#555",
   },
   backspaceKey: {
-    backgroundColor: "#ff6b6b",
-    borderWidth: 1,
-    borderColor: "#ff6b6b",
-    borderRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginHorizontal: 2,
+    backgroundColor: "#e05555",
+    borderRadius: 5 * sf,
+    paddingVertical: 10 * sf,
+    paddingHorizontal: 12 * sf,
+    marginHorizontal: 2 * sf,
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 42 * sf,
+    elevation: 1,
+  },
+  punctKey: {
+    width: keyW - 2 * sf,
+    marginHorizontal: 2 * sf,
   },
   spaceKey: {
-    backgroundColor: "#4ecdc4",
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#4ecdc4",
-    borderRadius: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    marginHorizontal: 2,
+    borderColor: "#ccc",
+    borderRadius: 5 * sf,
+    paddingVertical: 10 * sf,
+    paddingHorizontal: 12 * sf,
+    marginHorizontal: 2 * sf,
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
+    elevation: 1,
+  },
+  spaceText: {
+    fontSize: 14 * sf,
+    color: "#555",
+    fontWeight: "500",
   },
 });
 

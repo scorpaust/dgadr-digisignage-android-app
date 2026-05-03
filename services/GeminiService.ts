@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { WebSearchService } from "./WebSearchService";
 import { FileSearchService } from "./FileSearchService";
 
@@ -18,7 +19,8 @@ interface GeminiResponse {
   }>;
 }
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-3.1-flash-lite-preview";
+const GROUNDING_MODEL = "gemini-3.1-flash-lite-preview";
 
 const SYSTEM_PROMPT = `És um assistente especializado da DGADR (Direção-Geral de Agricultura e Desenvolvimento Rural de Portugal).
 
@@ -57,7 +59,14 @@ export class GeminiService {
   private fileSearchService: FileSearchService;
 
   constructor(apiKey: string) {
-    this.apiKey = apiKey;
+    // Aceita chave passada, ou lê directamente do Constants (igual ao RAGService)
+    this.apiKey =
+      apiKey ||
+      (Constants.expoConfig?.extra?.GOOGLE_API_KEY as string | undefined) ||
+      "";
+    console.log(this.apiKey
+      ? `✅ GeminiService: chave configurada (${this.apiKey.slice(0, 8)}...)`
+      : "⚠️ GeminiService: sem chave API — web search desativado");
     this.webSearchService = WebSearchService.getInstance();
     this.fileSearchService = FileSearchService.getInstance();
   }
@@ -146,6 +155,70 @@ export class GeminiService {
     } catch (error: any) {
       console.error("❌ Gemini Service Error:", error.message || error);
       throw new Error(`Erro ao processar pergunta com IA: ${error.message || "Unknown error"}`);
+    }
+  }
+
+  /**
+   * Queries Gemini with Google Search grounding restricted to DGADR/agriculture sites.
+   * Returns null if no useful answer is found or the model signals no information.
+   */
+  /**
+   * Searches dgadr.gov.pt and agricultura.gov.pt via DuckDuckGo, then asks
+   * Gemini to answer based on those results. No grounding API required.
+   */
+  /**
+   * Uses gemini-3.1-flash-lite-preview with Google Search grounding
+   * to search dgadr.gov.pt and agricultura.gov.pt for an answer.
+   */
+  public async queryWithSiteGrounding(query: string): Promise<string | null> {
+    if (!this.apiKey) return null;
+
+    try {
+      const body = {
+        systemInstruction: {
+          parts: [{
+            text:
+              "És um assistente da DGADR. Pesquisa nos sites dgadr.gov.pt e agricultura.gov.pt para responder. " +
+              "Se não encontrares informação útil, responde apenas com: SEM_INFORMACAO. " +
+              "Podes incluir nomes de dirigentes e responsáveis públicos constantes nos sites oficiais. " +
+              "Nunca incluas números de telefone ou emails. " +
+              "Resposta concisa, máximo 3 frases, em português formal.",
+          }],
+        },
+        contents: [{
+          role: "user" as const,
+          parts: [{ text: `site:dgadr.gov.pt OR site:agricultura.gov.pt — ${query}` }],
+        }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 350 },
+      };
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GROUNDING_MODEL}:generateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        console.warn("⚠️ Gemini grounding error:", response.status, errBody.slice(0, 200));
+        return null;
+      }
+
+      const data: GeminiResponse = await response.json();
+      const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+      console.log("🔍 Gemini grounding:", text.slice(0, 120));
+
+      if (!text || text.includes("SEM_INFORMACAO") || text.trim().length < 20) return null;
+
+      return this.sanitizeResponse(text.replace(/\[\d+\]/g, "").trim());
+    } catch (err: any) {
+      console.warn("⚠️ Gemini grounding exception:", err?.message ?? err);
+      return null;
     }
   }
 

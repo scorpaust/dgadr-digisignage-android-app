@@ -12,6 +12,7 @@ import {
   Linking,
   Alert,
   I18nManager,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AIService } from "../../services/AIService";
@@ -181,6 +182,14 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         windowSize={5}
         removeClippedSubviews
         updateCellsBatchingPeriod={80}
+        ListFooterComponent={
+          isLoading ? (
+            <View style={styles.thinkingBubble}>
+              <ActivityIndicator size="small" color="#7eda3b" style={styles.thinkingSpinner} />
+              <Text style={styles.thinkingText}>A pesquisar…</Text>
+            </View>
+          ) : null
+        }
       />
 
       <View style={styles.inputContainer}>
@@ -374,6 +383,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8 * scaleFactor,
+  },
+  thinkingBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 16 * scaleFactor,
+    paddingHorizontal: 14 * scaleFactor,
+    paddingVertical: 10 * scaleFactor,
+    marginVertical: 4 * scaleFactor,
+    marginHorizontal: 16 * scaleFactor,
+  },
+  thinkingSpinner: {
+    marginRight: 8 * scaleFactor,
+  },
+  thinkingText: {
+    fontSize: 14 * scaleFactor,
+    color: "#666",
+    fontStyle: "italic",
   },
 });
 
