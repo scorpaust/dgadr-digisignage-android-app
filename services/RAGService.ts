@@ -1,6 +1,4 @@
 import Constants from "expo-constants";
-import { Asset } from "expo-asset";
-import * as FileSystem from "expo-file-system";
 
 interface KnowledgeBaseEntry {
   id: string;
@@ -30,10 +28,6 @@ interface RAGResponse {
   contacts?: RAGContact[];
 }
 
-const knowledgeBaseAsset = Asset.fromModule(
-  require("../data/knowledge_base.kb"),
-);
-
 export class RAGService {
   private static instance: RAGService;
   private knowledgeBase: KnowledgeBaseEntry[] = [];
@@ -57,81 +51,9 @@ export class RAGService {
   }
 
   public async loadKnowledgeBase(): Promise<void> {
-    // Prevenir loop infinito e carregamento múltiplo
-    if (this.isLoaded || this.isLoading) return;
-
-    this.isLoading = true;
-
-    try {
-      const knowledgeBaseData = await this.readKnowledgeBaseFromAsset();
-
-      // Verificar se o arquivo existe e é um array
-      if (!knowledgeBaseData || !Array.isArray(knowledgeBaseData)) {
-        console.warn("⚠️ RAG: Knowledge base file is empty or invalid format");
-        this.isLoaded = true; // Marca como carregado para não tentar novamente
-        this.isLoading = false;
-        this.knowledgeBase = [];
-        return;
-      }
-
-      // Validar se os embeddings existem e não são null
-      const validEntries = knowledgeBaseData.filter(
-        (entry: KnowledgeBaseEntry) =>
-          entry &&
-          entry.embedding &&
-          Array.isArray(entry.embedding) &&
-          entry.embedding.length > 0 &&
-          entry.embedding[0] !== null,
-      );
-
-      if (validEntries.length === 0) {
-        console.warn("⚠️ RAG: Knowledge base has no valid embeddings");
-        this.isLoaded = true; // Marca como carregado para não tentar novamente
-        this.isLoading = false;
-        this.knowledgeBase = [];
-        return;
-      }
-
-      this.knowledgeBase = validEntries;
-      this.isLoaded = true;
-      this.isLoading = false;
-      console.log(`✅ RAG: Loaded ${validEntries.length} entries from knowledge base`);
-    } catch (error) {
-      // Knowledge base não encontrada, continua sem RAG
-      console.warn("⚠️ RAG: Failed to load knowledge base, RAG disabled");
-      this.isLoaded = true; // Marca como carregado para não tentar novamente
-      this.isLoading = false;
-      this.knowledgeBase = [];
-    }
-  }
-
-  private async readKnowledgeBaseFromAsset(): Promise<
-    KnowledgeBaseEntry[] | undefined
-  > {
-    try {
-      if (!knowledgeBaseAsset.downloaded) {
-        await knowledgeBaseAsset.downloadAsync();
-      }
-
-      const fileUri = knowledgeBaseAsset.localUri ?? knowledgeBaseAsset.uri;
-      if (!fileUri) {
-        throw new Error("Knowledge base asset URI unavailable");
-      }
-
-      const fileContents = await FileSystem.readAsStringAsync(fileUri, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
-      const parsed = JSON.parse(fileContents);
-
-      if (Array.isArray(parsed)) {
-        return parsed as KnowledgeBaseEntry[];
-      }
-
-      return undefined;
-    } catch (error) {
-      console.warn("⚠️ RAG: Unable to read knowledge base asset", error);
-      return undefined;
-    }
+    if (this.isLoaded) return;
+    this.isLoaded = true;
+    this.knowledgeBase = [];
   }
 
   private cosineSimilarity(a: number[], b: number[]): number {
