@@ -225,11 +225,20 @@ export class GeminiService {
   // Strip any phone numbers or emails the model may hallucinate
   private sanitizeResponse(response: string): string {
     return response
-      .replace(/21\s*844\s*\d{2}\s*\d{2}/g, "")
-      .replace(/geral@dgadr\.pt/gi, "")
-      .replace(/\(\s*\|\s*\)/g, "")
-      .replace(/\s+\|\s*$/g, "")
+      // Remove phone numbers
+      .replace(/\b21\s*844\s*\d{2}\s*\d{2}\b/g, "")
+      // Remove any email address
+      .replace(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, "")
+      // Remove orphaned contact labels left after value removal
+      .replace(/\b[Tt]elef(?:one)?\.?\s*:?\s*/g, "")
+      .replace(/\b[Ee]-?mail\.?\s*:?\s*/g, "")
+      // Remove pipe separators (used as contact separators by the model)
+      .replace(/\s*\|\s*/g, " ")
+      // Remove citation markers like [1]
+      .replace(/\[\d+\]/g, "")
+      // Clean up whitespace and stray punctuation
       .replace(/\s{2,}/g, " ")
+      .replace(/\s+([.,;:])/g, "$1")
       .trim();
   }
 }
