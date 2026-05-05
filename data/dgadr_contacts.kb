@@ -97,7 +97,7 @@
     },
     {
       "subjects": ["Animais Biológicos"],
-      "keywords": ["animais biológicos", "criação biológica", "pecuária biológica", "animais bio", "produção animal biológica", "gado biológico", "modo de produção biológico animais"],
+      "keywords": ["animais biológicos", "criação biológica", "pecuária biológica", "animais bio", "produção animal biológica", "gado biológico", "modo de produção biológico animais", "notificações em modo de produção biológico (MPB)"],
       "division": "Divisão da Qualidade e Recursos Genéticos",
       "division_abbr": "DQRG",
       "phones": ["21 844 24 52", "21 844 24 29"]
@@ -174,7 +174,7 @@
     },
     {
       "subjects": ["Jovem Empresário Rural, Reconhecim. Técnicos Prod. Integrada, Proteção Integrada e MPB, Estatuto de Agricultura Familiar"],
-      "keywords": ["jovem empresário rural", "JER", "reconhecimento técnicos", "produção integrada", "proteção integrada", "MPB", "modo produção biológico", "estatuto agricultura familiar", "EAF", "agricultura familiar", "jovem agricultor", "técnicos reconhecidos"],
+      "keywords": ["jovem empresário rural", "JER", "reconhecimento técnicos", "estatuto agricultura familiar", "EAF", "agricultura familiar", "jovem agricultor", "técnicos reconhecidos"],
       "division": "Divisão de Apoio às Explorações Agrícolas",
       "division_abbr": "DAEA",
       "phones": ["21 844 24 44", "21 844 24 54"]
@@ -293,7 +293,7 @@
     },
     {
       "subjects": ["Dados Estatísticos (Bio), Produção Biológica, TRACES - Cadastro"],
-      "keywords": ["dados estatísticos biológicos", "estatísticas bio", "produção biológica cadastro", "TRACES", "cadastro biológico", "operadores biológicos", "registo biológicos"],
+      "keywords": ["dados estatísticos biológicos", "estatísticas bio", "TRACES", "cadastro biológico", "cadastro operadores biológicos", "registo TRACES", "operadores biológicos", "registo biológicos", "sistema TRACES"],
       "division": "Divisão de Gestão dos Recursos Naturais",
       "division_abbr": "DGRN",
       "phones": ["21 844 23 81"]
