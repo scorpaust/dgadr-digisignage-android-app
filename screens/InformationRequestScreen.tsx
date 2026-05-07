@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   Alert,
   Modal,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ChatComponent from "../components/chat/ChatComponent";
@@ -89,13 +90,13 @@ const InformationRequestScreen = () => {
     setTabToClose(null);
   };
 
-  const updateChatTitle = (tabId: string, newTitle: string) => {
+  const updateChatTitle = useCallback((tabId: string, newTitle: string) => {
     setChatTabs((prev) =>
       prev.map((tab) => (tab.id === tabId ? { ...tab, title: newTitle } : tab))
     );
-  };
+  }, []);
 
-  const addMessage = (tabId: string, message: any) => {
+  const addMessage = useCallback((tabId: string, message: any) => {
     setChatTabs((prev) =>
       prev.map((tab) =>
         tab.id === tabId
@@ -103,7 +104,7 @@ const InformationRequestScreen = () => {
           : tab
       )
     );
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -157,6 +158,24 @@ const InformationRequestScreen = () => {
           onUpdateTitle={updateChatTitle}
         />
       )}
+
+      {/* Rodapé — aviso IA */}
+      <View style={styles.disclaimer}>
+        <Text style={styles.disclaimerText}>
+          A IA pode cometer erros. Considere utilizar o{" "}
+          <Text
+            style={styles.disclaimerLink}
+            onPress={() =>
+              Linking.openURL(
+                "https://app.dgadr.gov.pt/pedidos/pedidoinformacao_dgadr/",
+              )
+            }
+          >
+            canal tradicional para pedidos de informação
+          </Text>
+          .
+        </Text>
+      </View>
 
       {/* Modal de Confirmação para Fechar Chat */}
       <Modal
@@ -266,6 +285,23 @@ const styles = StyleSheet.create({
   newChatButton: {
     padding: 8 * scaleFactor,
     marginLeft: 8 * scaleFactor,
+  },
+  disclaimer: {
+    paddingHorizontal: 16 * scaleFactor,
+    paddingVertical: 6 * scaleFactor,
+    backgroundColor: "#f9f9f9",
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
+  disclaimerText: {
+    fontSize: 10 * scaleFactor,
+    color: "#888",
+    textAlign: "center",
+    lineHeight: 15 * scaleFactor,
+  },
+  disclaimerLink: {
+    color: "#7eda3b",
+    textDecorationLine: "underline",
   },
   // Estilos do Modal
   modalOverlay: {

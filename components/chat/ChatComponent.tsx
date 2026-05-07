@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, memo } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from "react";
 import {
   View,
   Text,
@@ -122,16 +122,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     ]);
   }, []);
 
-  const handleEmailPress = useCallback((email: string) => {
-    Alert.alert("Contactar", `Deseja enviar email para ${email}?`, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Enviar Email",
-        onPress: () => Linking.openURL(`mailto:${email}`),
-      },
-    ]);
-  }, []);
-
   // Funções do teclado virtual
   const handleVirtualKeyPress = (key: string) => {
     setInputText((prev) => {
@@ -165,6 +155,17 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
+  const listFooter = useMemo(
+    () =>
+      isLoading ? (
+        <View style={styles.thinkingBubble}>
+          <ActivityIndicator size="small" color="#7eda3b" style={styles.thinkingSpinner} />
+          <Text style={styles.thinkingText}>A pesquisar…</Text>
+        </View>
+      ) : null,
+    [isLoading],
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -178,18 +179,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         style={styles.messagesList}
         contentContainerStyle={styles.messagesContent}
         initialNumToRender={8}
-        maxToRenderPerBatch={6}
-        windowSize={5}
+        maxToRenderPerBatch={8}
+        windowSize={7}
         removeClippedSubviews
-        updateCellsBatchingPeriod={80}
-        ListFooterComponent={
-          isLoading ? (
-            <View style={styles.thinkingBubble}>
-              <ActivityIndicator size="small" color="#7eda3b" style={styles.thinkingSpinner} />
-              <Text style={styles.thinkingText}>A pesquisar…</Text>
-            </View>
-          ) : null
-        }
+        updateCellsBatchingPeriod={150}
+        ListFooterComponent={listFooter}
       />
 
       <View style={styles.inputContainer}>

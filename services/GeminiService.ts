@@ -178,19 +178,21 @@ export class GeminiService {
         systemInstruction: {
           parts: [{
             text:
-              "És um assistente da DGADR. Pesquisa nos sites dgadr.gov.pt e agricultura.gov.pt para responder. " +
-              "Se não encontrares informação útil, responde apenas com: SEM_INFORMACAO. " +
-              "Podes incluir nomes de dirigentes e responsáveis públicos constantes nos sites oficiais. " +
-              "Nunca incluas números de telefone ou emails. " +
-              "Resposta concisa, máximo 3 frases, em português formal.",
+              "És um assistente especializado da DGADR (Direção-Geral de Agricultura e Desenvolvimento Rural). " +
+              "A tua única fonte de informação são os sites dgadr.gov.pt e agricultura.gov.pt. " +
+              "Pesquisa nesses sites de forma exaustiva: páginas principais, publicações, legislação, notícias, documentos e páginas antigas. " +
+              "Se após pesquisar não encontrares informação útil, responde apenas: SEM_INFORMACAO. " +
+              "Podes mencionar nomes de dirigentes e responsáveis públicos que constem nos sites oficiais. " +
+              "Nunca incluas números de telefone ou endereços de email. " +
+              "Responde em português formal, de forma completa e clara.",
           }],
         },
         contents: [{
           role: "user" as const,
-          parts: [{ text: `site:dgadr.gov.pt OR site:agricultura.gov.pt — ${query}` }],
+          parts: [{ text: `site:dgadr.gov.pt OR site:agricultura.gov.pt ${query}` }],
         }],
         tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 350 },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 600 },
       };
 
       const response = await fetch(
@@ -210,8 +212,12 @@ export class GeminiService {
 
       const data: GeminiResponse = await response.json();
       const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const groundingMeta = (data.candidates?.[0] as any)?.groundingMetadata;
 
-      console.log("🔍 Gemini grounding:", text.slice(0, 120));
+      console.log("🔍 Gemini grounding resposta:", text.slice(0, 200));
+      if (groundingMeta?.webSearchQueries) {
+        console.log("🔎 Queries enviadas ao Google:", groundingMeta.webSearchQueries);
+      }
 
       if (!text || text.includes("SEM_INFORMACAO") || text.trim().length < 20) return null;
 
@@ -224,21 +230,29 @@ export class GeminiService {
 
   // Strip any phone numbers or emails the model may hallucinate
   private sanitizeResponse(response: string): string {
-    return response
-      // Remove phone numbers
+    let text = response
       .replace(/\b21\s*844\s*\d{2}\s*\d{2}\b/g, "")
-      // Remove any email address
       .replace(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, "")
-      // Remove orphaned contact labels left after value removal
       .replace(/\b[Tt]elef(?:one)?\.?\s*:?\s*/g, "")
       .replace(/\b[Ee]-?mail\.?\s*:?\s*/g, "")
-      // Remove pipe separators (used as contact separators by the model)
       .replace(/\s*\|\s*/g, " ")
-      // Remove citation markers like [1]
       .replace(/\[\d+\]/g, "")
-      // Clean up whitespace and stray punctuation
       .replace(/\s{2,}/g, " ")
+      .trim();
+
+    // Remove cadeias de palavras órfãs antes de pontuação final (aplica em loop até estabilizar)
+    // Ex: "através do ou ." → "através do ." → "através ." → remove frase incompleta
+    const orphan = /\s+\b(o|a|os|as|um|uma|do|da|dos|das|de|em|no|na|nos|nas|por|para|ao|à|pelo|pela|via|através|número|numero|contacto|endereço|ou|e|nem|mais|mas|que|com)\b\s*([.!?])/gi;
+    let prev = "";
+    while (prev !== text) {
+      prev = text;
+      text = text.replace(orphan, "$2");
+    }
+
+    return text
+      .replace(/[,:;]\s*([.!?])/g, "$1")
       .replace(/\s+([.,;:])/g, "$1")
+      .replace(/\s{2,}/g, " ")
       .trim();
   }
 }
