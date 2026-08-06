@@ -27,11 +27,14 @@ import OrganogramScreen from "./screens/OrganogramScreen";
 import EventsScreen from "./screens/EventsScreen";
 import NotificationScheduler from "./components/notifications/NotificationScheduler";
 import { useEffect, useMemo, useState } from "react";
+import EventDetailModal from "./components/events/EventDetailModal";
+import { eventService } from "./utils/eventService";
+import { EventRecord } from "./types/event";
 import {
-  EventModal,
-  eventsData,
-  getUpcomingEvents,
-} from "./components/events/EventModal";
+  getDownloadURL,
+  getStorage,
+  ref as storageRef,
+} from "firebase/storage";
 import ProjectsScreen from "./screens/ProjectsScreen";
 import { fetchAgricultureNews } from "./utils/fetchAgricultureNews";
 import { registerBackgroundFetch } from "./utils/backgroundFetch";
@@ -40,7 +43,7 @@ import { getLastFetchTime, saveLastFetchTime } from "./utils/asyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { latestSlotBefore, SLOT_KEY } from "./utils/slots";
 import { DEFAULT_HEADLINES } from "./utils/defaultHeadlines";
-import { db } from "./config";
+import { db, firebase } from "./config";
 import { onValue, ref } from "firebase/database";
 import LibFeatScreen from "./screens/LibFeatScreen";
 import NewslettersScreen from "./screens/NewslettersScreen";
@@ -62,7 +65,7 @@ function padding(
   a: string,
   b: string,
   c: string,
-  d: string
+  d: string,
 ): StyleProp<ViewStyle> {
   return {
     paddingTop: a,
@@ -89,7 +92,7 @@ function StackScreen() {
           headerTitle: () => (
             <View style={{ padding: "5%" }}>
               <Image
-                style={{ width: 110 * scaleFactor, height: 30 * scaleFactor }}a
+                style={{ width: 110 * scaleFactor, height: 30 * scaleFactor }}
                 source={require("./assets/dgadr-logo.png")}
               />
             </View>
@@ -223,20 +226,18 @@ function StackScreen() {
           headerBackVisible: false,
         }}
       />
-      {/*{
-        <Stack.Screen
-          name="EventsScreen"
-          component={EventsScreen}
-          options={{
-            title: "Eventos",
-            headerLeft: () => <BackButton />,
-            headerTitleStyle: {
-              fontSize: 24 * scaleFactor,
-            },
-            headerBackVisible: false,
-          }}
-        />
-      }*/}
+      <Stack.Screen
+        name="EventsScreen"
+        component={EventsScreen}
+        options={{
+          title: "Eventos",
+          headerLeft: () => <BackButton />,
+          headerTitleStyle: {
+            fontSize: 24 * scaleFactor,
+          },
+          headerBackVisible: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }
@@ -280,51 +281,6 @@ function TabScreen() {
           tabBarIcon: () => (
             <SimpleLineIcons
               name="organization"
-              style={styles.icon}
-              size={20 * scaleFactor}
-              color="black"
-            />
-          ),
-          tabBarLabel: "",
-        }}
-      />
-      <Tab.Screen
-        name="MediaScreen"
-        component={MediaScreen}
-        options={{
-          tabBarIcon: () => (
-            <Ionicons
-              name="images"
-              style={styles.icon}
-              size={20 * scaleFactor}
-              color="black"
-            />
-          ),
-          tabBarLabel: "",
-        }}
-      />
-      <Tab.Screen
-        name="LibFeatScreen"
-        component={LibFeatScreen}
-        options={{
-          tabBarIcon: () => (
-            <Ionicons
-              name="barcode"
-              style={styles.icon}
-              size={20 * scaleFactor}
-              color="black"
-            />
-          ),
-          tabBarLabel: "",
-        }}
-      />
-      <Tab.Screen
-        name="NewslettersScreen"
-        component={NewslettersScreen}
-        options={{
-          tabBarIcon: () => (
-            <Ionicons
-              name="newspaper-outline"
               style={styles.icon}
               size={20 * scaleFactor}
               color="black"
@@ -378,6 +334,81 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
+      <Tab.Screen
+        name="InformationRequestScreen"
+        component={InformationRequestScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="chatbubbles-outline"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="MediaScreen"
+        component={MediaScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="images"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="EventsScreen"
+        component={EventsScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="calendar-outline"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="NewslettersScreen"
+        component={NewslettersScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="newspaper-outline"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
+      <Tab.Screen
+        name="LibFeatScreen"
+        component={LibFeatScreen}
+        options={{
+          tabBarIcon: () => (
+            <Ionicons
+              name="barcode"
+              style={styles.icon}
+              size={20 * scaleFactor}
+              color="black"
+            />
+          ),
+          tabBarLabel: "",
+        }}
+      />
 
       <Tab.Screen
         name="UsefulLinksScreen"
@@ -394,6 +425,7 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
+
       <Tab.Screen
         name="Menu"
         component={StackScreen}
@@ -409,30 +441,13 @@ function TabScreen() {
           tabBarLabel: "",
         }}
       />
-      {/*{
-        <Tab.Screen
-          name="EventsScreen"
-          component={EventsScreen}
-          options={{
-            tabBarIcon: () => (
-              <Ionicons
-                name="calendar-outline"
-                style={styles.icon}
-                size={20 * scaleFactor}
-                color="black"
-              />
-            ),
-            tabBarLabel: "",
-          }}
-        />
-      }*/}
     </Tab.Navigator>
   );
 }
 
 export default function App() {
-  const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [popupEvent, setPopupEvent] = useState<EventRecord | null>(null);
+  const [popupImageUri, setPopupImageUri] = useState<string | undefined>();
 
   // dentro do teu App.tsx
   // ...
@@ -444,7 +459,7 @@ export default function App() {
     const defaults = new Set(DEFAULT_HEADLINES);
     const sanitizedPrimary = primary.filter((title) => !defaults.has(title));
     const sanitizedSecondary = secondary.filter(
-      (title) => !defaults.has(title)
+      (title) => !defaults.has(title),
     );
     return [...sanitizedPrimary, ...sanitizedSecondary, ...DEFAULT_HEADLINES];
   }, [firebaseHeadlines, apiHeadlines]);
@@ -515,7 +530,7 @@ export default function App() {
       },
       (error) => {
         // Erro silencioso
-      }
+      },
     );
 
     return () => {
@@ -657,25 +672,48 @@ export default function App() {
   }, []);
   // ...
 
-  const upcomingEvents = getUpcomingEvents(eventsData);
-
   useEffect(() => {
-    if (upcomingEvents.length > 0) {
-      setModalVisible(true);
-    }
+    let mounted = true;
+
+    (async () => {
+      try {
+        const events = await eventService.getEvents();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = events
+          .map((event) => ({ event, date: new Date(event.startDate) }))
+          .filter(({ date }) => !Number.isNaN(date.getTime()) && date >= today)
+          .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+        const next = upcoming[0]?.event;
+        if (!next || !mounted) return;
+
+        setPopupEvent(next);
+
+        if (next.imagePath) {
+          try {
+            const storage = getStorage(
+              firebase,
+              "gs://dgadr-digisignage-app.appspot.com",
+            );
+            const url = await getDownloadURL(
+              storageRef(storage, next.imagePath),
+            );
+            if (mounted) setPopupImageUri(url);
+          } catch {
+            // Erro silencioso
+          }
+        }
+      } catch {
+        // Erro silencioso
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
-
-  const onCloseHandler = () => {
-    setModalVisible(false);
-  };
-
-  const showNext =
-    selectedEventIndex !== null &&
-    selectedEventIndex < upcomingEvents.length - 1;
-  const showPrevious = selectedEventIndex !== null && selectedEventIndex > 0;
-
-  const selectedEvent =
-    selectedEventIndex !== null ? upcomingEvents[selectedEventIndex] : null;
 
   return (
     <SafeAreaProvider>
@@ -684,6 +722,15 @@ export default function App() {
         <NavigationContainer>
           <TabScreen />
         </NavigationContainer>
+
+        {popupEvent ? (
+          <EventDetailModal
+            visible
+            event={popupEvent}
+            imageUri={popupImageUri}
+            onClose={() => setPopupEvent(null)}
+          />
+        ) : null}
 
         {/* Ticker fixo no fundo */}
         <View

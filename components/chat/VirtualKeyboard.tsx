@@ -1,17 +1,13 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-const windowWidth = Dimensions.get("window").width;
-const sf = windowWidth / 320; // mesma escala do resto da app
-const keyW = Math.floor((windowWidth - 20 * sf) / 10) - 4 * sf;
 
 interface VirtualKeyboardProps {
   onKeyPress: (key: string) => void;
@@ -28,7 +24,23 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   onHide,
   visible,
 }) => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [isUpperCase, setIsUpperCase] = useState(false);
+
+  // Escala pela largura, como no resto da app, MAS nunca deixando o teclado
+  // (barra + acentos + 5 linhas de teclas) ultrapassar uma fração segura da
+  // altura real do ecrã. Em ecrãs muito largos e pouco altos (ex.: digital
+  // signage), a escala só pela largura fazia o teclado ficar mais alto do
+  // que o ecrã, cortando as últimas linhas.
+  const sfWidth = windowWidth / 320;
+  const NATURAL_HEIGHT_AT_SF1 = 340; // altura estimada do teclado completo a sf=1
+  const MAX_HEIGHT_RATIO = 0.42; // nunca ocupar mais de ~42% da altura do ecrã
+  const sfHeight = (windowHeight * MAX_HEIGHT_RATIO) / NATURAL_HEIGHT_AT_SF1;
+  const sf = Math.min(sfWidth, sfHeight);
+  const styles = useMemo(
+    () => createStyles(sf, windowHeight * (MAX_HEIGHT_RATIO + 0.05)),
+    [sf, windowHeight],
+  );
 
   if (!visible) return null;
 
@@ -116,132 +128,139 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#f0f0f0",
-    borderTopWidth: 1 * sf,
-    borderTopColor: "#ccc",
-  },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 12 * sf,
-    paddingVertical: 6 * sf,
-    backgroundColor: "#e8e8e8",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  title: {
-    fontSize: 13 * sf,
-    fontWeight: "600",
-    color: "#555",
-  },
-  closeButton: {
-    padding: 4 * sf,
-  },
-  accentScroll: {
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  accentContent: {
-    flexDirection: "row",
-    paddingHorizontal: 8 * sf,
-    paddingVertical: 6 * sf,
-    alignItems: "center",
-  },
-  accentKey: {
-    backgroundColor: "#7eda3b",
-    borderRadius: 6 * sf,
-    paddingVertical: 8 * sf,
-    paddingHorizontal: 12 * sf,
-    marginHorizontal: 3 * sf,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 38 * sf,
-  },
-  accentKeyText: {
-    fontSize: 16 * sf,
-    color: "#fff",
-    fontWeight: "600",
-  },
-  keyboard: {
-    paddingHorizontal: 8 * sf,
-    paddingVertical: 6 * sf,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 4 * sf,
-  },
-  key: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5 * sf,
-    paddingVertical: 10 * sf,
-    width: keyW,
-    marginHorizontal: 2 * sf,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 1,
-  },
-  keyText: {
-    fontSize: 15 * sf,
-    color: "#333",
-    fontWeight: "500",
-  },
-  shiftKey: {
-    backgroundColor: "#e0e0e0",
-    borderWidth: 1,
-    borderColor: "#bbb",
-    borderRadius: 5 * sf,
-    paddingVertical: 10 * sf,
-    paddingHorizontal: 12 * sf,
-    marginHorizontal: 2 * sf,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 42 * sf,
-    elevation: 1,
-  },
-  shiftKeyActive: {
-    backgroundColor: "#555",
-    borderColor: "#555",
-  },
-  backspaceKey: {
-    backgroundColor: "#e05555",
-    borderRadius: 5 * sf,
-    paddingVertical: 10 * sf,
-    paddingHorizontal: 12 * sf,
-    marginHorizontal: 2 * sf,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 42 * sf,
-    elevation: 1,
-  },
-  punctKey: {
-    width: keyW - 2 * sf,
-    marginHorizontal: 2 * sf,
-  },
-  spaceKey: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5 * sf,
-    paddingVertical: 10 * sf,
-    paddingHorizontal: 12 * sf,
-    marginHorizontal: 2 * sf,
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 1,
-  },
-  spaceText: {
-    fontSize: 14 * sf,
-    color: "#555",
-    fontWeight: "500",
-  },
-});
+// Estilos gerados a partir da largura real do teclado, para que cada linha
+// preencha exatamente essa largura (via flex) e nunca fique cortada ou
+// desalinhada, seja qual for o tamanho do ecrã.
+const createStyles = (sf: number, maxContainerHeight: number) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: "#f0f0f0",
+      borderTopWidth: 1,
+      borderTopColor: "#ccc",
+      maxHeight: maxContainerHeight,
+      overflow: "hidden",
+    },
+    topBar: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 12 * sf,
+      paddingVertical: 6 * sf,
+      backgroundColor: "#e8e8e8",
+      borderBottomWidth: 1,
+      borderBottomColor: "#ddd",
+    },
+    title: {
+      fontSize: 13 * sf,
+      fontWeight: "600",
+      color: "#555",
+    },
+    closeButton: {
+      padding: 4 * sf,
+    },
+    accentScroll: {
+      backgroundColor: "#fff",
+      borderBottomWidth: 1,
+      borderBottomColor: "#ddd",
+    },
+    accentContent: {
+      flexDirection: "row",
+      paddingHorizontal: 8 * sf,
+      paddingVertical: 6 * sf,
+      alignItems: "center",
+    },
+    accentKey: {
+      backgroundColor: "#7eda3b",
+      borderRadius: 6 * sf,
+      paddingVertical: 8 * sf,
+      paddingHorizontal: 12 * sf,
+      marginHorizontal: 3 * sf,
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 38 * sf,
+    },
+    accentKeyText: {
+      fontSize: 16 * sf,
+      color: "#fff",
+      fontWeight: "600",
+    },
+    keyboard: {
+      paddingHorizontal: 8 * sf,
+      paddingVertical: 6 * sf,
+    },
+    row: {
+      flexDirection: "row",
+      marginBottom: 4 * sf,
+    },
+    key: {
+      flex: 1,
+      minWidth: 0,
+      backgroundColor: "#fff",
+      borderWidth: 1,
+      borderColor: "#ccc",
+      borderRadius: 5 * sf,
+      paddingVertical: 10 * sf,
+      marginHorizontal: 2 * sf,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 1,
+    },
+    keyText: {
+      fontSize: 15 * sf,
+      color: "#333",
+      fontWeight: "500",
+    },
+    shiftKey: {
+      flex: 1.4,
+      minWidth: 0,
+      backgroundColor: "#e0e0e0",
+      borderWidth: 1,
+      borderColor: "#bbb",
+      borderRadius: 5 * sf,
+      paddingVertical: 10 * sf,
+      marginHorizontal: 2 * sf,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 1,
+    },
+    shiftKeyActive: {
+      backgroundColor: "#555",
+      borderColor: "#555",
+    },
+    backspaceKey: {
+      flex: 1.4,
+      minWidth: 0,
+      backgroundColor: "#e05555",
+      borderRadius: 5 * sf,
+      paddingVertical: 10 * sf,
+      marginHorizontal: 2 * sf,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 1,
+    },
+    punctKey: {
+      flex: 1,
+      minWidth: 0,
+      marginHorizontal: 2 * sf,
+    },
+    spaceKey: {
+      flex: 3,
+      minWidth: 0,
+      backgroundColor: "#fff",
+      borderWidth: 1,
+      borderColor: "#ccc",
+      borderRadius: 5 * sf,
+      paddingVertical: 10 * sf,
+      marginHorizontal: 2 * sf,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 1,
+    },
+    spaceText: {
+      fontSize: 14 * sf,
+      color: "#555",
+      fontWeight: "500",
+    },
+  });
 
 export default VirtualKeyboard;

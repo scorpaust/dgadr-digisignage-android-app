@@ -1,99 +1,292 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  View,
-  FlatList,
-  TouchableOpacity,
-  Modal,
+  ActivityIndicator,
+  Dimensions,
+  ScrollView,
   StyleSheet,
-  ImageSourcePropType,
+  Text,
+  View,
 } from "react-native";
-import EventItem from "../components/events/EventItem";
-import FullScreenImage from "../components/events/FullScreenImage";
-import { EventItemType } from "../types/event-item"; // Certifique-se de importar o tipo corretamente
+import { Ionicons } from "@expo/vector-icons";
+import { getDownloadURL, getStorage, ref } from "firebase/storage";
+import { FirebaseError } from "firebase/app";
+import { firebase } from "../config";
+import { useEvents } from "../utils/useEvents";
+import { EventRecord } from "../types/event";
+import EventHighlightCard from "../components/events/EventHighlightCard";
+import EventListItem from "../components/events/EventListItem";
+import EventDetailModal from "../components/events/EventDetailModal";
+import InfoModal from "../components/InfoModal";
+import { EVENTS_ACCENT } from "../components/events/eventsTheme";
 
-const eventsData: EventItemType[] = [
-  {
-    id: "1",
-    title:
-      'Exposição "Paisagens Ideológicas. O Tempo nas Colónias Agrícolas em Portugal"',
-    subtitle: "",
-    summary:
-      "O projeto expõe a evolução das sete colónias agrícolas implementadas durante o regime do Estado Novo, através de imagens e relatos que atravessam mais de meio século. A iniciativa visa não apenas resgatar a memória histórica desses espaços, mas também refletir sobre as transformações socioeconómicas ocorridas no meio rural português. A DGADR espera a presença de todos para promover a partilha de conhecimentos sobre um capítulo importante da História agrícola do País",
-    date: "2024-03-11 a 2024-04-30",
-    time: "9:30 às 16h30",
-    imgUrl: require("../assets/events/2024_03_11_expo_juntas_colonias_agricolas.png"),
-  },
-  {
-    id: "2",
-    title: "3ª exposição/venda internacional de orquídeas de Coimbra",
-    subtitle: "",
-    summary:
-      "Depois do enorme sucesso das duas primeiras edições, a Associação Portuguesa de Orquidofilia (A.P.O.) tem o prazer de anunciar a realização da 3.ª Exposição / Venda Internacional de Orquídeas de Coimbra no Seminário Maior de Coimbra numa iniciativa que pretende divulgar e promover o conhecimento das pessoas em torno destas maravilhosas plantas de floração exuberante que apaixona tantos colecionadores e curiosos.",
-    date: "2024-06-14 a 2024-06-16",
-    time: "10:00 às 19h00",
-    imgUrl: require("../assets/events/20240524101400-flyer_coimbra_2024_main_60x90_004.jpg"),
-  },
-  {
-    id: "3",
-    title: "VitiVino 2024",
-    subtitle:
-      "III Simpósio de Viticultura e V Colóquio Vitivinícol em Cantanhede",
-    summary:
-      "Nos dias 14 e 15 de novembro de 2024, Cantanhede será palco do III Simpósio de Viticultura e V Colóquio Vitivinícola, um evento organizado pela Associação Portuguesa de Horticultura e a Sociedade de Ciências Agrárias de Portugal, em parceria com o Município de Cantanhede e o Biocant Park.",
-    date: "2024-11-14 a 2024-11-15",
-    time: "",
-    imgUrl: require("../assets/events/grapes-276070_1280-1140x570.jpg"),
-  },
-  // Adicione mais eventos conforme necessário
-];
+const windowWidth = Dimensions.get("window").width;
+const scaleFactor = windowWidth / 320;
 
-const EventListScreen = () => {
-  const [selectedImage, setSelectedImage] =
-    useState<ImageSourcePropType | null>(null);
+const EventsScreen: React.FC = () => {
+  const { events, loading, error: eventsError } = useEvents();
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [storageError, setStorageError] = useState<FirebaseError | undefined>(
+    undefined
+  );
+  const [selectedEvent, setSelectedEvent] = useState<EventRecord | null>(null);
 
-  const onCloseHandler = () => {
-    setSelectedImage(null);
-  };
-
-  const renderItem = ({ item }: { item: EventItemType }) => (
-    <TouchableOpacity onPress={() => setSelectedImage(item.imgUrl)}>
-      <EventItem
-        title={item.title}
-        subtitle={item.subtitle}
-        summary={item.summary}
-        date={item.date}
-        time={item.time}
-        id={item.id}
-        imgUrl={item.imgUrl}
-      />
-    </TouchableOpacity>
+  const eventsWithImagePath = useMemo(
+    () =>
+      events
+        .filter((event) => Boolean(event.imagePath))
+        .map((event) => ({ id: event.id, path: event.imagePath as string })),
+    [events]
   );
 
+  const fetchImages = useCallback(async () => {
+    if (!eventsWithImagePath.length) {
+      setImageUrls({});
+      return;
+    }
+
+    setStorageError(undefined);
+    try {
+      const storage = getStorage(
+        firebase,
+        "gs://dgadr-digisignage-app.appspot.com"
+      );
+
+      const entries = await Promise.all(
+        eventsWithImagePath.map(async ({ id, path }) => {
+          try {
+            const downloadUrl = await getDownloadURL(ref(storage, path));
+            return [id, downloadUrl] as const;
+          } catch (imageError) {
+            if (imageError instanceof FirebaseError) {
+              setStorageError(imageError);
+            }
+            return null;
+          }
+        })
+      );
+
+      const validEntries = entries.filter(
+        (entry): entry is readonly [string, string] => Boolean(entry)
+      );
+
+      setImageUrls(Object.fromEntries(validEntries));
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        setStorageError(error);
+      }
+    }
+  }, [eventsWithImagePath]);
+
+  useEffect(() => {
+    fetchImages();
+  }, [fetchImages]);
+
+  const { nextEvent, upcoming, past } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const withDates = events
+      .map((event) => ({ event, date: new Date(event.startDate) }))
+      .filter(({ date }) => !Number.isNaN(date.getTime()));
+
+    const upcomingList = withDates
+      .filter(({ date }) => date >= today)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(({ event }) => event);
+
+    const pastList = withDates
+      .filter(({ date }) => date < today)
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .map(({ event }) => event);
+
+    return {
+      nextEvent: upcomingList[0] ?? null,
+      upcoming: upcomingList.slice(1),
+      past: pastList,
+    };
+  }, [events]);
+
+  const handleCloseStorageError = useCallback(
+    () => setStorageError(undefined),
+    []
+  );
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={EVENTS_ACCENT} />
+        <Text style={styles.loadingText}>A carregar eventos...</Text>
+      </View>
+    );
+  }
+
+  if (eventsError) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>Erro ao carregar eventos</Text>
+        <Text style={styles.errorSubtext}>{eventsError}</Text>
+      </View>
+    );
+  }
+
+  if (!events.length) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Ionicons name="calendar-outline" size={56 * scaleFactor} color="#c9d3dd" />
+        <Text style={styles.emptyText}>Não existem eventos de momento.</Text>
+        <Text style={styles.emptySubtext}>
+          Volte a consultar mais tarde para novidades sobre eventos.
+        </Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={eventsData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-      />
-      {selectedImage && (
-        <Modal
-          visible={true}
-          transparent={true}
-          onRequestClose={() => setSelectedImage(null)}
-        >
-          <FullScreenImage imgUrl={selectedImage} onClose={onCloseHandler} />
-        </Modal>
-      )}
-    </View>
+    <>
+      {storageError ? (
+        <InfoModal info={storageError} onClose={handleCloseStorageError} />
+      ) : null}
+
+      {selectedEvent ? (
+        <EventDetailModal
+          visible
+          event={selectedEvent}
+          imageUri={
+            selectedEvent.imagePath ? imageUrls[selectedEvent.id] : undefined
+          }
+          onClose={() => setSelectedEvent(null)}
+        />
+      ) : null}
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {nextEvent ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Próximo Evento</Text>
+            <Text style={styles.sectionSubtitle}>
+              Fique a par do próximo evento em destaque.
+            </Text>
+            <View style={styles.highlightWrapper}>
+              <EventHighlightCard
+                event={nextEvent}
+                imageUri={imageUrls[nextEvent.id]}
+                onPress={() => setSelectedEvent(nextEvent)}
+              />
+            </View>
+          </View>
+        ) : null}
+
+        {upcoming.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Outros Eventos Agendados</Text>
+            <View style={styles.listWrapper}>
+              {upcoming.map((event) => (
+                <EventListItem
+                  key={event.id}
+                  event={event}
+                  imageUri={imageUrls[event.id]}
+                  onPress={() => setSelectedEvent(event)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {past.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Eventos Anteriores</Text>
+            <View style={styles.listWrapper}>
+              {past.map((event) => (
+                <EventListItem
+                  key={event.id}
+                  event={event}
+                  imageUri={imageUrls[event.id]}
+                  onPress={() => setSelectedEvent(event)}
+                  past
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+      </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f5f7fa",
+  },
+  contentContainer: {
+    paddingHorizontal: 20 * scaleFactor,
+    paddingVertical: 24 * scaleFactor,
+  },
+  section: {
+    marginBottom: 32 * scaleFactor,
+  },
+  sectionTitle: {
+    fontSize: 22 * scaleFactor,
+    fontWeight: "700",
+    color: "#102a43",
+  },
+  sectionSubtitle: {
+    marginTop: 6 * scaleFactor,
+    fontSize: 14 * scaleFactor,
+    color: "#52606d",
+  },
+  highlightWrapper: {
+    marginTop: 20 * scaleFactor,
+  },
+  listWrapper: {
+    marginTop: 12 * scaleFactor,
     backgroundColor: "#fff",
+    borderRadius: 16 * scaleFactor,
+    paddingHorizontal: 14 * scaleFactor,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32 * scaleFactor,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#52606d",
+  },
+  errorText: {
+    fontSize: 18 * scaleFactor,
+    fontWeight: "600",
+    color: "#e53e3e",
+    textAlign: "center",
+  },
+  errorSubtext: {
+    marginTop: 8 * scaleFactor,
+    fontSize: 14 * scaleFactor,
+    color: "#52606d",
+    textAlign: "center",
+  },
+  emptyText: {
+    marginTop: 16 * scaleFactor,
+    fontSize: 17 * scaleFactor,
+    fontWeight: "600",
+    color: "#334e68",
+    textAlign: "center",
+  },
+  emptySubtext: {
+    marginTop: 8 * scaleFactor,
+    fontSize: 14 * scaleFactor,
+    color: "#7b8794",
+    textAlign: "center",
   },
 });
 
-export default EventListScreen;
+export default EventsScreen;

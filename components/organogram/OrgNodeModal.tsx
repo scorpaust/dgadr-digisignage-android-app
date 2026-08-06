@@ -111,7 +111,9 @@ const OrgNodeModal: React.FC<OrgNodeModalProps> = ({
               {/* Responsible Person */}
               {data.name && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Responsável</Text>
+                  {getPositionTitle(data.position) !== "Direção" && (
+                    <Text style={styles.sectionTitle}>Responsável</Text>
+                  )}
                   <Text style={styles.personName}>{data.name}</Text>
                 </View>
               )}

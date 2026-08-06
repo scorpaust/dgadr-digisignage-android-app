@@ -38,10 +38,10 @@ export const MENU_ITEMS: MenuItem[] = [
   },
   {
     id: "5",
-    icon: "link",
-    title: "As Nossas Ligações",
-    color: "#8A2BE2",
-    onPress: "UsefulLinksScreen",
+    icon: "chatbubbles-outline",
+    title: "Pedidos de Informação",
+    color: "#4CAF50",
+    onPress: "InformationRequestScreen",
   },
   {
     id: "6",
@@ -51,19 +51,19 @@ export const MENU_ITEMS: MenuItem[] = [
     onPress: "MediaScreen",
   },
   {
+    id: "7",
+    icon: "calendar-outline",
+    title: "Eventos",
+    color: "#C2185B",
+    onPress: "EventsScreen",
+  },
+  {
     id: "6b",
     icon: "newspaper-outline",
     title: "Newsletters",
     color: "#2E7D32",
     onPress: "NewslettersScreen",
   },
-  /*{
-    id: "7",
-    icon: "calendar-outline",
-    title: "Eventos",
-    color: "#f5428d",
-    onPress: "EventsScreen",
-  },*/
   {
     id: "8",
     icon: "barcode",
@@ -73,9 +73,9 @@ export const MENU_ITEMS: MenuItem[] = [
   },
   {
     id: "9",
-    icon: "chatbubbles-outline",
-    title: "Pedidos de Informação",
-    color: "#4CAF50",
-    onPress: "InformationRequestScreen",
+    icon: "link",
+    title: "As Nossas Ligações",
+    color: "#8A2BE2",
+    onPress: "UsefulLinksScreen",
   },
 ];
